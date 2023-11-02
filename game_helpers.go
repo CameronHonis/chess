@@ -412,6 +412,9 @@ func GetLegalMoves(board *Board, stopAtFirst bool) (*[8][8][]*Move, uint8) {
 	//  2. The total count of all legal moves
 	var boardMoves [8][8][]*Move
 	movesCount := uint8(0)
+	if board.IsTerminal {
+		return &boardMoves, movesCount
+	}
 	for rank := uint8(1); rank < 9; rank++ {
 		for file := uint8(1); file < 9; file++ {
 			square := Square{rank, file}
@@ -517,6 +520,12 @@ func UpdateBoardFromMove(board *Board, move *Move) {
 }
 
 func UpdateBoardPiecesFromMove(board *Board, move *Move) {
+	if move.CapturedPiece != EMPTY && board.optMaterialCount != nil {
+		matCountBuilder := NewMaterialCountBuilder()
+		matCountBuilder = matCountBuilder.WithMaterialCount(board.optMaterialCount)
+		matCountBuilder = matCountBuilder.WithoutPiece(move.CapturedPiece, move.EndSquare)
+		board.optMaterialCount = matCountBuilder.Build()
+	}
 	movingPiece := board.GetPieceOnSquare(move.StartSquare)
 	var landingPiece Piece
 	if move.PawnUpgradedTo != EMPTY {

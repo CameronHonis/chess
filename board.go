@@ -80,6 +80,7 @@ func BoardFromFEN(fen string) (*Board, error) {
 	}
 	for fenSegIdx, fenSeg := range fenSegs {
 		if fenSegIdx == 0 {
+			materialCountBuilder := NewMaterialCountBuilder()
 			rank := uint8(8)
 			file := uint8(1)
 			for _, FENRune := range []rune(fenSeg) {
@@ -106,6 +107,7 @@ func BoardFromFEN(fen string) (*Board, error) {
 						return nil, fmt.Errorf("invalid FEN: unknown piece char '%c' at %s", FENRune, coords)
 					}
 					pieces[rank-1][file-1] = piece
+					materialCountBuilder.WithPiece(piece, &Square{rank, file})
 					file++
 				}
 			}
@@ -113,6 +115,7 @@ func BoardFromFEN(fen string) (*Board, error) {
 				return nil, fmt.Errorf("invalid FEN: not enough rows")
 			}
 			boardBuilder.WithPieces(&pieces)
+			boardBuilder.WithMaterialCount(materialCountBuilder.Build())
 		} else if fenSegIdx == 1 {
 			if fenSeg == "w" {
 				boardBuilder.WithIsWhiteTurn(true)
@@ -275,45 +278,15 @@ func (board *Board) ComputeMaterialCount() *MaterialCount {
 		return board.optMaterialCount
 	}
 
-	materialCount := MaterialCount{}
+	materialCountBuilder := NewMaterialCountBuilder()
 	for r := uint8(0); r < 8; r++ {
 		for c := uint8(0); c < 8; c++ {
 			piece := board.Pieces[r][c]
-			if piece == WHITE_PAWN {
-				materialCount.WhitePawnCount++
-			} else if piece == WHITE_KNIGHT {
-				materialCount.WhiteKnightCount++
-			} else if piece == WHITE_BISHOP {
-				square := Square{Rank: r + 1, File: c + 1}
-				if square.IsLightSquare() {
-					materialCount.WhiteLightBishopCount++
-				} else {
-					materialCount.WhiteDarkBishopCount++
-				}
-			} else if piece == WHITE_ROOK {
-				materialCount.WhiteRookCount++
-			} else if piece == WHITE_QUEEN {
-				materialCount.WhiteQueenCount++
-			} else if piece == BLACK_PAWN {
-				materialCount.BlackPawnCount++
-			} else if piece == BLACK_KNIGHT {
-				materialCount.BlackKnightCount++
-			} else if piece == BLACK_BISHOP {
-				square := Square{Rank: r + 1, File: c + 1}
-				if square.IsLightSquare() {
-					materialCount.BlackLightBishopCount++
-				} else {
-					materialCount.BlackDarkBishopCount++
-				}
-			} else if piece == BLACK_ROOK {
-				materialCount.BlackRookCount++
-			} else if piece == BLACK_QUEEN {
-				materialCount.BlackQueenCount++
-			}
+			materialCountBuilder.WithPiece(piece, &Square{r + 1, c + 1})
 		}
 	}
-	board.optMaterialCount = &materialCount
-	return &materialCount
+	board.optMaterialCount = materialCountBuilder.Build()
+	return board.optMaterialCount
 }
 
 func (board *Board) GetKingSquare(isWhiteKing bool) *Square {

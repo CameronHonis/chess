@@ -189,6 +189,22 @@ var _ = Describe("Board", func() {
 					Expect(err).ToNot(HaveOccurred())
 				})
 			})
+			When("the FEN specifies an en passant square", func() {
+				It("returns a board with the en passant square set", func() {
+					board, err := BoardFromFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(board.OptEnPassantSquare).To(Equal(&Square{Rank: 3, File: 5}))
+				})
+			})
+			When("the FEN represents an insufficient material draw board", func() {
+				It("returns a terminal draw board", func() {
+					board, err := BoardFromFEN("8/8/2k2K2/5N2/8/8/8/8 w - - 0 1")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(board.IsTerminal).To(BeTrue())
+					Expect(board.IsWhiteWinner).To(BeFalse())
+					Expect(board.IsBlackWinner).To(BeFalse())
+				})
+			})
 		})
 		When("the FEN is not valid", func() {
 			Context("the FEN does not have the correct amount of segments", func() {

@@ -892,6 +892,18 @@ var _ = Describe("GameHelpers", func() {
 				}
 			})
 		})
+		When("the board is a draw board", func() {
+			var board *Board
+			BeforeEach(func() {
+				var err error
+				board, err = BoardFromFEN("8/8/2k2K2/5N2/8/8/8/8 w - - 0 1")
+				Expect(err).ToNot(HaveOccurred())
+			})
+			It("returns no moves", func() {
+				_, legalMovesCount := GetLegalMoves(board, false)
+				Expect(legalMovesCount).To(Equal(uint8(0)))
+			})
+		})
 	})
 	Describe("#UpdateBoardFromMove", func() {
 		var board *Board
@@ -1299,6 +1311,7 @@ var _ = Describe("GameHelpers", func() {
 		When("the remaining material forces a draw", func() {
 			BeforeEach(func() {
 				board, _ = BoardFromFEN("8/8/8/5N2/1K6/6q1/8/7k w - - 1 1")
+				Expect(board.IsTerminal).To(BeFalse())
 				move = Move{WHITE_KNIGHT, &Square{5, 6}, &Square{3, 7}, BLACK_QUEEN, []*Square{{3, 7}}, EMPTY}
 			})
 			It("results in a terminal draw board", func() {
@@ -1333,6 +1346,23 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.IsBlackWinner).To(BeTrue())
 				})
 			})
+		})
+	})
+	Describe("#UpdateBoardPiecesFromMove", func() {
+		var board *Board
+		var move *Move
+		BeforeEach(func() {
+			board, _ = BoardFromFEN("r1bqkb1r/ppp2ppp/2n2n2/1N1pp3/3P1B2/8/PPP1PPPP/R2QKBNR w KQkq - 0 1")
+			move = &Move{WHITE_PAWN, &Square{4, 4}, &Square{5, 5}, BLACK_PAWN, make([]*Square, 0), EMPTY}
+		})
+		It("moves the piece", func() {
+			UpdateBoardPiecesFromMove(board, move)
+			Expect(board.GetPieceOnSquare(&Square{4, 4})).To(Equal(EMPTY))
+			Expect(board.GetPieceOnSquare(&Square{5, 5})).To(Equal(WHITE_PAWN))
+		})
+		It("updates the cached material count", func() {
+			UpdateBoardFromMove(board, move)
+			Expect(board.ComputeMaterialCount().BlackPawnCount).To(Equal(uint8(7)))
 		})
 	})
 })

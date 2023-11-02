@@ -74,6 +74,15 @@ func (bb *BoardBuilder) WithIsBlackWinner(isBlackWinner bool) *BoardBuilder {
 	bb.board.IsTerminal = isBlackWinner
 	return bb
 }
+func (bb *BoardBuilder) WithMaterialCount(materialCount *MaterialCount) *BoardBuilder {
+	bb.board.optMaterialCount = materialCount
+	if bb.board.IsForcedDrawByMaterial() {
+		bb.board.IsTerminal = true
+		bb.board.IsWhiteWinner = false
+		bb.board.IsBlackWinner = false
+	}
+	return bb
+}
 func (bb *BoardBuilder) Build() *Board {
 	return bb.board
 }
