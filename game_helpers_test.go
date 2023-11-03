@@ -425,6 +425,15 @@ var _ = Describe("GameHelpers", func() {
 				})
 			})
 		})
+		When("the board is a terminal board", func() {
+			It("returns no moves", func() {
+				board := GetInitBoard()
+				board.IsTerminal = true
+				realMoves, err := GetLegalMovesForPawn(board, &Square{2, 2})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(*realMoves).To(HaveLen(0))
+			})
+		})
 	})
 	Describe("#GetLegalMovesForKnight", func() {
 		When("the knight is in the bottom right corner", func() {
@@ -491,11 +500,20 @@ var _ = Describe("GameHelpers", func() {
 				})
 			})
 		})
+		When("the board is a terminal board", func() {
+			It("returns no moves", func() {
+				board := GetInitBoard()
+				board.IsTerminal = true
+				realMoves, err := GetLegalMovesForKnight(board, &Square{1, 2})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(*realMoves).To(HaveLen(0))
+			})
+		})
 	})
 	Describe("#GetLegalMovesForBishop", func() {
 		When("the bishop is unimpeded in the middle of the board", func() {
 			It("returns all legal bishop moves", func() {
-				board, _ := BoardFromFEN("2K5/8/8/4B3/8/8/8/5k2 w - - 0 1")
+				board, _ := BoardFromFEN("2K5/8/8/4B3/8/8/P7/5k2 w - - 0 1")
 				realMoves, err := GetLegalMovesForBishop(board, &Square{5, 5})
 				Expect(err).ToNot(HaveOccurred())
 				expMoves := []Move{
@@ -553,6 +571,15 @@ var _ = Describe("GameHelpers", func() {
 				compareMoves(&expMoves, realMoves)
 			})
 		})
+		When("the board is a terminal board", func() {
+			It("returns no moves", func() {
+				board, _ := BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/8/1P6/P1PPPPPP/RNBQKBNR w KQkq - 0 1")
+				board.IsTerminal = true
+				realMoves, err := GetLegalMovesForBishop(board, &Square{1, 3})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(*realMoves).To(HaveLen(0))
+			})
+		})
 	})
 	Describe("#GetLegalMovesForRook", func() {
 		When("the rook is unimpeded in the middle of the board", func() {
@@ -601,6 +628,15 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_ROOK, &Square{8, 1}, &Square{8, 2}, EMPTY, []*Square{{8, 2}}, EMPTY},
 				}
 				compareMoves(&expMoves, realMoves)
+			})
+		})
+		When("the board is a terminal board", func() {
+			It("returns no moves", func() {
+				board, _ := BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1")
+				board.IsTerminal = true
+				realMoves, err := GetLegalMovesForRook(board, &Square{1, 1})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(*realMoves).To(HaveLen(0))
 			})
 		})
 	})
@@ -668,6 +704,15 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_QUEEN, &Square{6, 7}, &Square{7, 7}, BLACK_PAWN, []*Square{{7, 7}}, EMPTY},
 				}
 				compareMoves(&expMoves, realMoves)
+			})
+		})
+		When("the board is a terminal board", func() {
+			It("returns no moves", func() {
+				board, _ := BoardFromFEN("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1")
+				board.IsTerminal = true
+				realMoves, err := GetLegalMovesForQueen(board, &Square{1, 4})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(*realMoves).To(HaveLen(0))
 			})
 		})
 	})
@@ -834,6 +879,37 @@ var _ = Describe("GameHelpers", func() {
 						}
 						Expect(foundCastleMove).To(BeTrue())
 					})
+				})
+			})
+		})
+		When("the board is a terminal board", func() {
+			It("returns no moves", func() {
+				board, _ := BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1")
+				board.IsTerminal = true
+				realMoves := GetLegalMovesForKing(board)
+				Expect(*realMoves).To(HaveLen(0))
+			})
+		})
+	})
+	Describe("#IsLegalMove", func() {
+		When("the move is a legal move", func() {
+			It("returns true", func() {
+				board := GetInitBoard()
+				move := &Move{WHITE_PAWN, &Square{2, 2}, &Square{4, 2}, EMPTY, make([]*Square, 0), EMPTY}
+				Expect(IsLegalMove(board, move)).To(BeTrue())
+			})
+		})
+		When("the move is not a legal move", func() {
+			It("returns false", func() {
+				board := GetInitBoard()
+				move := &Move{WHITE_PAWN, &Square{2, 2}, &Square{5, 2}, EMPTY, make([]*Square, 0), EMPTY}
+				Expect(IsLegalMove(board, move)).To(BeFalse())
+			})
+			Context("and the move would be legal except that the board is in a terminal board state", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("8/4k3/8/8/5N2/6K1/8/8 w - - 0 1")
+					move := &Move{WHITE_KING, &Square{3, 7}, &Square{4, 7}, EMPTY, make([]*Square, 0), EMPTY}
+					Expect(IsLegalMove(board, move)).To(BeFalse())
 				})
 			})
 		})

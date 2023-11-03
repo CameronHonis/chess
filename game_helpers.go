@@ -123,6 +123,10 @@ func addKingChecksToMoves(board *Board, moves *[]*Move) {
 	}
 }
 func GetLegalMovesForPawn(board *Board, square *Square) (*[]*Move, error) {
+	if board.IsTerminal {
+		emptyMoves := make([]*Move, 0)
+		return &emptyMoves, nil
+	}
 	pawnMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
 	var upgradePieces [4]Piece
@@ -218,6 +222,10 @@ func GetLegalMovesForPawn(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForKnight(board *Board, square *Square) (*[]*Move, error) {
+	if board.IsTerminal {
+		emptyMoves := make([]*Move, 0)
+		return &emptyMoves, nil
+	}
 	knightMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
 	if board.IsWhiteTurn && piece != WHITE_KNIGHT {
@@ -254,6 +262,10 @@ func GetLegalMovesForKnight(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForBishop(board *Board, square *Square) (*[]*Move, error) {
+	if board.IsTerminal {
+		emptyMoves := make([]*Move, 0)
+		return &emptyMoves, nil
+	}
 	bishopMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
 	if board.IsWhiteTurn && piece != WHITE_BISHOP {
@@ -288,6 +300,10 @@ func GetLegalMovesForBishop(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForRook(board *Board, square *Square) (*[]*Move, error) {
+	if board.IsTerminal {
+		emptyMoves := make([]*Move, 0)
+		return &emptyMoves, nil
+	}
 	rookMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
 	if board.IsWhiteTurn && piece != WHITE_ROOK {
@@ -322,6 +338,10 @@ func GetLegalMovesForRook(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForQueen(board *Board, square *Square) (*[]*Move, error) {
+	if board.IsTerminal {
+		emptyMoves := make([]*Move, 0)
+		return &emptyMoves, nil
+	}
 	queenMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
 	if board.IsWhiteTurn && piece != WHITE_QUEEN {
@@ -356,6 +376,10 @@ func GetLegalMovesForQueen(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForKing(board *Board) *[]*Move {
+	if board.IsTerminal {
+		emptyMoves := make([]*Move, 0)
+		return &emptyMoves
+	}
 	kingMoves := make([]*Move, 0)
 	whiteKingSquare, blackKingSquare := board.ComputeKingPositions()
 	var square *Square
@@ -403,6 +427,44 @@ func GetLegalMovesForKing(board *Board) *[]*Move {
 	}
 	kingMoves = *filterMovesByKingSafety(board, &kingMoves)
 	return &kingMoves
+}
+
+func IsLegalMove(board *Board, move *Move) bool {
+	if move.Piece == EMPTY {
+		return false
+	}
+	piece := board.GetPieceOnSquare(move.StartSquare)
+	if move.Piece != piece {
+		return false
+	}
+	if piece.IsWhite() != board.IsWhiteTurn {
+		return false
+	}
+
+	var legalMoves *[]*Move
+	var err error
+	if piece.IsPawn() {
+		legalMoves, err = GetLegalMovesForPawn(board, move.StartSquare)
+	} else if piece.IsKnight() {
+		legalMoves, err = GetLegalMovesForKnight(board, move.StartSquare)
+	} else if piece.IsBishop() {
+		legalMoves, err = GetLegalMovesForBishop(board, move.StartSquare)
+	} else if piece.IsRook() {
+		legalMoves, err = GetLegalMovesForRook(board, move.StartSquare)
+	} else if piece.IsQueen() {
+		legalMoves, err = GetLegalMovesForQueen(board, move.StartSquare)
+	} else {
+		legalMoves = GetLegalMovesForKing(board)
+	}
+	if err != nil {
+		return false
+	}
+	for _, legalMove := range *legalMoves {
+		if legalMove.EqualTo(move) {
+			return true
+		}
+	}
+	return false
 }
 
 func GetLegalMoves(board *Board, stopAtFirst bool) (*[8][8][]*Move, uint8) {
