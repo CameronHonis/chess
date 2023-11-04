@@ -6,12 +6,12 @@ import (
 )
 
 type Move struct {
-	Piece               Piece
-	StartSquare         *Square
-	EndSquare           *Square
-	CapturedPiece       Piece
-	KingCheckingSquares []*Square
-	PawnUpgradedTo      Piece
+	Piece               Piece     `json:"piece"`
+	StartSquare         *Square   `json:"startSquare"`
+	EndSquare           *Square   `json:"endSquare"`
+	CapturedPiece       Piece     `json:"capturedPiece"`
+	KingCheckingSquares []*Square `json:"kingCheckingSquares"`
+	PawnUpgradedTo      Piece     `json:"pawnUpgradedTo"`
 }
 
 func (move *Move) SortKingCheckingSquares() {

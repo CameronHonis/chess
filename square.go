@@ -7,8 +7,8 @@ import (
 )
 
 type Square struct {
-	Rank uint8
-	File uint8
+	Rank uint8 `json:"rank"`
+	File uint8 `json:"file"`
 }
 
 func (s *Square) IsValidBoardSquare() bool {

@@ -8,19 +8,19 @@ import (
 )
 
 type Board struct {
-	Pieces                  [8][8]Piece
-	OptEnPassantSquare      *Square
-	IsWhiteTurn             bool
-	CanWhiteCastleQueenside bool
-	CanWhiteCastleKingside  bool
-	CanBlackCastleQueenside bool
-	CanBlackCastleKingside  bool
-	HalfMoveClockCount      uint8
-	FullMoveCount           uint16
-	RepetitionsByMiniFEN    map[string]uint8
-	IsTerminal              bool
-	IsWhiteWinner           bool
-	IsBlackWinner           bool
+	Pieces                  [8][8]Piece      `json:"pieces"`
+	OptEnPassantSquare      *Square          `json:"enPassantSquare"`
+	IsWhiteTurn             bool             `json:"isWhiteTurn"`
+	CanWhiteCastleQueenside bool             `json:"canWhiteCastleQueenside"`
+	CanWhiteCastleKingside  bool             `json:"canWhiteCastleKingside"`
+	CanBlackCastleQueenside bool             `json:"canBlackCastleQueenside"`
+	CanBlackCastleKingside  bool             `json:"canBlackCastleKingside"`
+	HalfMoveClockCount      uint8            `json:"halfMoveClockCount"`
+	FullMoveCount           uint16           `json:"fullMoveCount"`
+	RepetitionsByMiniFEN    map[string]uint8 `json:"repetitionsByMiniFEN"`
+	IsTerminal              bool             `json:"isTerminal"`
+	IsWhiteWinner           bool             `json:"isWhiteWinner"`
+	IsBlackWinner           bool             `json:"isBlackWinner"`
 	// memoizers
 	optMaterialCount   *MaterialCount
 	optWhiteKingSquare *Square
