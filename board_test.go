@@ -306,4 +306,19 @@ var _ = Describe("Board", func() {
 			})
 		})
 	})
+	Describe("::IsInitBoard", func() {
+		When("the board is the initial board", func() {
+			It("returns true", func() {
+				board := GetInitBoard()
+				Expect(board.IsInitBoard()).To(BeTrue())
+			})
+		})
+		When("the board is not the initial board", func() {
+			It("returns false", func() {
+				board := GetInitBoard()
+				UpdateBoardFromMove(board, &Move{WHITE_PAWN, &Square{2, 1}, &Square{4, 1}, EMPTY, nil, EMPTY})
+				Expect(board.IsInitBoard()).To(BeFalse())
+			})
+		})
+	})
 })

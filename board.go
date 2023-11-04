@@ -376,3 +376,7 @@ func (board *Board) ToMiniFEN() string {
 	fenSegs := strings.Split(fen, " ")
 	return strings.Join(fenSegs[:4], " ")
 }
+
+func (board *Board) IsInitBoard() bool {
+	return board.ToMiniFEN() == "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -" && board.FullMoveCount == uint16(1)
+}
