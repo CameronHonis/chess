@@ -109,12 +109,41 @@ var _ = Describe("Board", func() {
 			})
 		})
 	})
-	Describe("::HasLegalMoves", func() {
+	Describe("::HasLegalNextMove", func() {
+		var board *Board
 		When("the board represents a stalemate", func() {
-
+			BeforeEach(func() {
+				board, _ = BoardFromFEN("k7/2Q5/8/8/8/4K3/8/8 b - - 0 1")
+			})
+			It("returns false", func() {
+				Expect(board.HasLegalNextMove()).To(BeFalse())
+			})
 		})
-		When("the board does not represent a stalemate", func() {
-
+		When("the board results in checkmate", func() {
+			Context("and only one piece is giving a check", func() {
+				BeforeEach(func() {
+					board, _ = BoardFromFEN("k7/8/8/8/8/4K3/R7/1R6 b - - 0 1")
+				})
+				It("returns false", func() {
+					Expect(board.HasLegalNextMove()).To(BeFalse())
+				})
+			})
+			Context("and two pieces are giving a check", func() {
+				BeforeEach(func() {
+					board, _ = BoardFromFEN("k7/2N5/8/8/8/4K3/R7/1R6 b - - 0 1")
+				})
+				It("returns false", func() {
+					Expect(board.HasLegalNextMove()).To(BeFalse())
+				})
+			})
+		})
+		When("the board does not represent a stalemate or checkmate", func() {
+			BeforeEach(func() {
+				board, _ = BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/3PP3/8/PPP2PPP/RNBQKBNR b KQkq d3 0 2")
+			})
+			It("returns true", func() {
+				Expect(board.HasLegalNextMove()).To(BeTrue())
+			})
 		})
 	})
 	Describe("::getMaterialCount", func() {

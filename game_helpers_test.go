@@ -968,6 +968,16 @@ var _ = Describe("GameHelpers", func() {
 				}
 			})
 		})
+		When("the board is from the scotch opening", func() {
+			var board *Board
+			BeforeEach(func() {
+				board, _ = BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/3PP3/8/PPP2PPP/RNBQKBNR b KQkq d3 0 2")
+			})
+			It("returns the correct number of legal moves for white", func() {
+				_, movesCount := GetLegalMoves(board, false)
+				Expect(movesCount).To(Equal(uint8(30)))
+			})
+		})
 		When("the board is a draw board", func() {
 			var board *Board
 			BeforeEach(func() {

@@ -242,11 +242,15 @@ func (board *Board) HasLegalNextMove() bool {
 	if len(*moves) == 0 {
 		checkingSquares := GetCheckingSquares(board, board.IsWhiteTurn)
 		if len(*checkingSquares) > 1 {
+			// assume that it must be checkmate if the king is in check and can't move anywhere
 			return false
+		} else {
+			_, legalMovesCount := GetLegalMoves(board, true)
+			return legalMovesCount > 0
 		}
+	} else {
+		return true
 	}
-	_, legalMovesCount := GetLegalMoves(board, true)
-	return legalMovesCount > 1
 }
 
 func (board *Board) ComputeKingPositions() (*Square, *Square) {
