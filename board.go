@@ -115,7 +115,7 @@ func BoardFromFEN(fen string) (*Board, error) {
 				return nil, fmt.Errorf("invalid FEN: not enough rows")
 			}
 			boardBuilder.WithPieces(&pieces)
-			boardBuilder.WithMaterialCount(materialCountBuilder.Build())
+			boardBuilder.board.optMaterialCount = materialCountBuilder.Build()
 		} else if fenSegIdx == 1 {
 			if fenSeg == "w" {
 				boardBuilder.WithIsWhiteTurn(true)
@@ -174,6 +174,7 @@ func BoardFromFEN(fen string) (*Board, error) {
 			boardBuilder.WithFullMoveCount(uint16(fullMoveCount))
 		}
 	}
+	UpdateBoardIsTerminal(boardBuilder.board, boardBuilder, 0)
 	return boardBuilder.Build(), nil
 }
 
@@ -193,11 +194,6 @@ func GetInitBoard() *Board {
 		{BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK},
 	}, nil, true, true, true, true,
 		true, 0, 1, repetitionsByMiniFEN, false, false, false)
-}
-
-func (board *Board) SetPieceOnSquare(piece Piece, square *Square) *Board {
-	board.Pieces[square.Rank-1][square.File-1] = piece
-	return board
 }
 
 func (board *Board) GetPieceOnSquare(square *Square) Piece {

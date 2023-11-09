@@ -14,6 +14,33 @@ func NewBoardBuilder() *BoardBuilder {
 
 func (bb *BoardBuilder) WithPieces(pieces *[8][8]Piece) *BoardBuilder {
 	bb.board.Pieces = *pieces
+	bb.board.optMaterialCount = nil
+	return bb
+}
+
+func (bb *BoardBuilder) WithPiece(piece Piece, square *Square) *BoardBuilder {
+	prevPiece := bb.board.Pieces[square.Rank-1][square.File-1]
+	bb.board.Pieces[square.Rank-1][square.File-1] = piece
+	if bb.board.optMaterialCount != nil {
+		materialCountBuilder := NewMaterialCountBuilder().WithMaterialCount(bb.board.optMaterialCount)
+		if prevPiece != EMPTY {
+			materialCountBuilder.WithoutPiece(prevPiece, square)
+		}
+		materialCountBuilder.WithPiece(piece, square)
+		bb.board.optMaterialCount = materialCountBuilder.Build()
+	}
+	if prevPiece == WHITE_KING {
+		bb.board.optWhiteKingSquare = nil
+	}
+	if prevPiece == BLACK_KING {
+		bb.board.optBlackKingSquare = nil
+	}
+	if piece == WHITE_KING {
+		bb.board.optWhiteKingSquare = square
+	}
+	if piece == BLACK_KING {
+		bb.board.optBlackKingSquare = square
+	}
 	return bb
 }
 
@@ -61,28 +88,31 @@ func (bb *BoardBuilder) WithRepetitionsByMiniFEN(repetitionsByMiniFEN map[string
 	return bb
 }
 
+func (bb *BoardBuilder) WithMiniFENCount(miniFEN string, count uint8) *BoardBuilder {
+	bb.board.RepetitionsByMiniFEN[miniFEN] = count
+	return bb
+}
+
 func (bb *BoardBuilder) WithIsTerminal(isTerminal bool) *BoardBuilder {
 	bb.board.IsTerminal = isTerminal
 	return bb
 }
 
 func (bb *BoardBuilder) WithIsWhiteWinner(isWhiteWinner bool) *BoardBuilder {
-	bb.board.IsTerminal = isWhiteWinner
+	bb.board.IsWhiteWinner = isWhiteWinner
 	return bb
 }
 func (bb *BoardBuilder) WithIsBlackWinner(isBlackWinner bool) *BoardBuilder {
-	bb.board.IsTerminal = isBlackWinner
+	bb.board.IsBlackWinner = isBlackWinner
 	return bb
 }
-func (bb *BoardBuilder) WithMaterialCount(materialCount *MaterialCount) *BoardBuilder {
-	bb.board.optMaterialCount = materialCount
-	if bb.board.IsForcedDrawByMaterial() {
-		bb.board.IsTerminal = true
-		bb.board.IsWhiteWinner = false
-		bb.board.IsBlackWinner = false
-	}
+
+func (bb *BoardBuilder) FromBoard(board *Board) *BoardBuilder {
+	boardCopy := *board
+	bb.board = &boardCopy
 	return bb
 }
+
 func (bb *BoardBuilder) Build() *Board {
 	return bb.board
 }

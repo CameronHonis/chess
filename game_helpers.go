@@ -105,9 +105,10 @@ func GetCheckingSquares(board *Board, isWhiteKing bool) *[]*Square {
 func filterMovesByKingSafety(board *Board, moves *[]*Move) *[]*Move {
 	filteredMoves := make([]*Move, 0, len(*moves))
 	for _, move := range *moves {
-		tempBoard := *board
-		UpdateBoardPiecesFromMove(&tempBoard, move)
-		checkingSquares := GetCheckingSquares(&tempBoard, board.IsWhiteTurn)
+		boardBuilder := NewBoardBuilder().FromBoard(board)
+		UpdatePiecesFromMove(board, boardBuilder, move)
+		newBoard := boardBuilder.Build()
+		checkingSquares := GetCheckingSquares(newBoard, board.IsWhiteTurn)
 		if len(*checkingSquares) == 0 {
 			filteredMoves = append(filteredMoves, move)
 		}
@@ -117,9 +118,10 @@ func filterMovesByKingSafety(board *Board, moves *[]*Move) *[]*Move {
 
 func addKingChecksToMoves(board *Board, moves *[]*Move) {
 	for _, move := range *moves {
-		tempBoard := *board
-		UpdateBoardPiecesFromMove(&tempBoard, move)
-		move.KingCheckingSquares = *GetCheckingSquares(&tempBoard, !board.IsWhiteTurn)
+		boardBuilder := NewBoardBuilder().FromBoard(board)
+		UpdatePiecesFromMove(board, boardBuilder, move)
+		newBoard := boardBuilder.Build()
+		move.KingCheckingSquares = *GetCheckingSquares(newBoard, !board.IsWhiteTurn)
 	}
 }
 func GetLegalMovesForPawn(board *Board, square *Square) (*[]*Move, error) {
@@ -510,10 +512,14 @@ func GetLegalMoves(board *Board, stopAtFirst bool) (*[8][8][]*Move, uint8) {
 	return &boardMoves, movesCount
 }
 
+// TODO: do we need square param here?
 func canCastleKingside(board *Board, square *Square) bool {
 	if board.IsWhiteTurn && !board.CanWhiteCastleKingside {
 		return false
 	} else if !board.IsWhiteTurn && !board.CanBlackCastleKingside {
+		return false
+	}
+	if len(*GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	piece := board.GetPieceOnSquare(square)
@@ -526,24 +532,28 @@ func canCastleKingside(board *Board, square *Square) bool {
 		return false
 	}
 
-	tempBoard := *board
-	tempBoard.SetPieceOnSquare(piece, &kingRightSquare)
-	tempBoard.SetPieceOnSquare(EMPTY, square)
-	if len(*GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
+	boardBuilder := NewBoardBuilder().FromBoard(board)
+	boardBuilder.WithPiece(EMPTY, square)
+	boardBuilder.WithPiece(piece, &kingRightSquare)
+	if len(*GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
-	tempBoard.SetPieceOnSquare(piece, &kingRightTwoSquare)
-	tempBoard.SetPieceOnSquare(EMPTY, &kingRightSquare)
-	if len(*GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
+	boardBuilder.WithPiece(EMPTY, &kingRightSquare)
+	boardBuilder.WithPiece(piece, &kingRightTwoSquare)
+	if len(*GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	return true
 }
 
+// TODO: do we need square param here?
 func canCastleQueenside(board *Board, square *Square) bool {
 	if board.IsWhiteTurn && !board.CanWhiteCastleQueenside {
 		return false
 	} else if !board.IsWhiteTurn && !board.CanBlackCastleQueenside {
+		return false
+	}
+	if len(*GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	piece := board.GetPieceOnSquare(square)
@@ -556,151 +566,148 @@ func canCastleQueenside(board *Board, square *Square) bool {
 		return false
 	}
 
-	tempBoard := *board
-	tempBoard.SetPieceOnSquare(piece, &kingLeftSquare)
-	tempBoard.SetPieceOnSquare(EMPTY, square)
-	if len(*GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
+	boardBuilder := NewBoardBuilder().FromBoard(board)
+	boardBuilder.WithPiece(EMPTY, square)
+	boardBuilder.WithPiece(piece, &kingLeftSquare)
+	if len(*GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
-	tempBoard.SetPieceOnSquare(piece, &kingLeftTwoSquare)
-	tempBoard.SetPieceOnSquare(EMPTY, &kingLeftSquare)
-	if len(*GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
+	boardBuilder.WithPiece(EMPTY, &kingLeftSquare)
+	boardBuilder.WithPiece(piece, &kingLeftTwoSquare)
+	if len(*GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	return true
 }
 
-func UpdateBoardFromMove(board *Board, move *Move) {
-	UpdateBoardPiecesFromMove(board, move)
-	UpdateBoardCounters(board, move)
-	UpdateBoardEnPassantSquare(board, move)
-	board.IsWhiteTurn = !board.IsWhiteTurn
+func GetBoardFromMove(board *Board, move *Move) *Board {
+	boardBuilder := NewBoardBuilder().FromBoard(board)
 
-	castleRightsChanged := UpdateCastleRights(board, move)
-	repetitions := UpdateRepetitionsByFENMap(board, move, castleRightsChanged)
-	UpdateBoardIsTerminal(board, repetitions)
+	UpdatePiecesFromMove(board, boardBuilder, move)
+	UpdateBoardCounters(board, boardBuilder, move)
+	UpdateBoardEnPassantSquare(board, boardBuilder, move)
+
+	boardBuilder.WithIsWhiteTurn(!board.IsWhiteTurn)
+
+	UpdateCastleRights(board, boardBuilder, move)
+	repetitions := UpdateRepetitionsByFENMap(board, boardBuilder, move)
+	UpdateBoardIsTerminal(board, boardBuilder, repetitions)
+
+	return boardBuilder.Build()
 }
 
-func UpdateBoardPiecesFromMove(board *Board, move *Move) {
-	if move.CapturedPiece != EMPTY && board.optMaterialCount != nil {
-		matCountBuilder := NewMaterialCountBuilder()
-		matCountBuilder = matCountBuilder.WithMaterialCount(board.optMaterialCount)
-		matCountBuilder = matCountBuilder.WithoutPiece(move.CapturedPiece, move.EndSquare)
-		board.optMaterialCount = matCountBuilder.Build()
-	}
-	movingPiece := board.GetPieceOnSquare(move.StartSquare)
+func UpdatePiecesFromMove(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {
+	movingPiece := lastBoard.GetPieceOnSquare(move.StartSquare)
 	var landingPiece Piece
 	if move.PawnUpgradedTo != EMPTY {
 		landingPiece = move.PawnUpgradedTo
 	} else {
 		landingPiece = movingPiece
 	}
-	board.SetPieceOnSquare(landingPiece, move.EndSquare)
-	board.SetPieceOnSquare(EMPTY, move.StartSquare)
-	if board.OptEnPassantSquare != nil && movingPiece.IsPawn() && move.EndSquare.EqualTo(board.OptEnPassantSquare) {
+	boardBuilder.WithPiece(EMPTY, move.StartSquare)
+	boardBuilder.WithPiece(landingPiece, move.EndSquare)
+	if lastBoard.OptEnPassantSquare != nil && movingPiece.IsPawn() && move.EndSquare.EqualTo(lastBoard.OptEnPassantSquare) {
+		// en passant capture
 		enPassantedPawnSquare := Square{
 			move.StartSquare.Rank,
-			board.OptEnPassantSquare.File,
+			lastBoard.OptEnPassantSquare.File,
 		}
-		board.SetPieceOnSquare(EMPTY, &enPassantedPawnSquare)
+		boardBuilder.WithPiece(EMPTY, &enPassantedPawnSquare)
 	}
-	if move.Piece == WHITE_KING {
-		board.optWhiteKingSquare = move.EndSquare
-		if move.EndSquare.EqualTo(&Square{1, 7}) {
-			board.SetPieceOnSquare(WHITE_ROOK, &Square{1, 6})
-			board.SetPieceOnSquare(EMPTY, &Square{1, 8})
-		} else if move.EndSquare.EqualTo(&Square{1, 3}) {
-			board.SetPieceOnSquare(WHITE_ROOK, &Square{1, 4})
-			board.SetPieceOnSquare(EMPTY, &Square{1, 1})
-		}
-	} else if move.Piece == BLACK_KING {
-		board.optBlackKingSquare = move.EndSquare
-		if move.EndSquare.EqualTo(&Square{8, 7}) {
-			board.SetPieceOnSquare(BLACK_ROOK, &Square{8, 6})
-			board.SetPieceOnSquare(EMPTY, &Square{8, 8})
-		} else if move.EndSquare.EqualTo(&Square{8, 3}) {
-			board.SetPieceOnSquare(BLACK_ROOK, &Square{8, 4})
-			board.SetPieceOnSquare(EMPTY, &Square{8, 1})
+
+	if move.IsCastles() {
+		if move.Piece == WHITE_KING {
+			if move.EndSquare.EqualTo(&Square{1, 7}) {
+				boardBuilder.WithPiece(EMPTY, &Square{1, 8})
+				boardBuilder.WithPiece(WHITE_ROOK, &Square{1, 6})
+			} else if move.EndSquare.EqualTo(&Square{1, 3}) {
+				boardBuilder.WithPiece(EMPTY, &Square{1, 1})
+				boardBuilder.WithPiece(WHITE_ROOK, &Square{1, 4})
+			}
+		} else if move.Piece == BLACK_KING {
+			if move.EndSquare.EqualTo(&Square{8, 7}) {
+				boardBuilder.WithPiece(EMPTY, &Square{8, 8})
+				boardBuilder.WithPiece(BLACK_ROOK, &Square{8, 6})
+			} else if move.EndSquare.EqualTo(&Square{8, 3}) {
+				boardBuilder.WithPiece(EMPTY, &Square{8, 1})
+				boardBuilder.WithPiece(BLACK_ROOK, &Square{8, 4})
+			}
 		}
 	}
 }
 
-func UpdateBoardCounters(board *Board, move *Move) {
+func UpdateBoardCounters(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {
 	if move.CapturedPiece != EMPTY || move.Piece.IsPawn() {
-		board.HalfMoveClockCount = 0
+		boardBuilder.WithHalfMoveClockCount(0)
 	} else {
-		board.HalfMoveClockCount++
+		boardBuilder.WithHalfMoveClockCount(lastBoard.HalfMoveClockCount + 1)
 	}
-	if !board.IsWhiteTurn {
-		board.FullMoveCount++
+	if !lastBoard.IsWhiteTurn {
+		boardBuilder.WithFullMoveCount(lastBoard.FullMoveCount + 1)
 	}
 }
-func UpdateBoardEnPassantSquare(board *Board, move *Move) {
+func UpdateBoardEnPassantSquare(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {
 	if move.DoesAllowEnPassant() {
-		board.OptEnPassantSquare = &Square{
+		enPassantSquare := &Square{
 			uint8(math.Min(float64(move.StartSquare.Rank), float64(move.EndSquare.Rank))) + 1,
 			move.StartSquare.File,
 		}
+		boardBuilder.WithEnPassantSquare(enPassantSquare)
 	}
 }
-func UpdateCastleRights(board *Board, move *Move) bool {
+func UpdateCastleRights(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {
 	if !move.Piece.IsKing() && !move.Piece.IsRook() {
-		return false
+		return
 	}
-	castleRightsChanged := false
 	if move.Piece.IsRook() {
-		if board.CanWhiteCastleQueenside && move.StartSquare.EqualTo(&Square{1, 1}) {
-			board.CanWhiteCastleQueenside = false
-			castleRightsChanged = true
-		} else if board.CanWhiteCastleKingside && move.StartSquare.EqualTo(&Square{1, 8}) {
-			board.CanWhiteCastleKingside = false
-			castleRightsChanged = true
-		} else if board.CanBlackCastleQueenside && move.StartSquare.EqualTo(&Square{8, 1}) {
-			board.CanBlackCastleQueenside = false
-			castleRightsChanged = true
-		} else if board.CanBlackCastleKingside && move.StartSquare.EqualTo(&Square{8, 8}) {
-			board.CanBlackCastleKingside = false
-			castleRightsChanged = true
+		if lastBoard.CanWhiteCastleQueenside && move.StartSquare.EqualTo(&Square{1, 1}) {
+			boardBuilder.WithCanWhiteCastleQueenside(false)
+		} else if lastBoard.CanWhiteCastleKingside && move.StartSquare.EqualTo(&Square{1, 8}) {
+			boardBuilder.WithCanWhiteCastleKingside(false)
+		} else if lastBoard.CanBlackCastleQueenside && move.StartSquare.EqualTo(&Square{8, 1}) {
+			boardBuilder.WithCanBlackCastleQueenside(false)
+		} else if lastBoard.CanBlackCastleKingside && move.StartSquare.EqualTo(&Square{8, 8}) {
+			boardBuilder.WithCanBlackCastleKingside(false)
 		}
 	} else if move.Piece.IsKing() {
-		if move.Piece.IsWhite() && (board.CanWhiteCastleKingside || board.CanWhiteCastleQueenside) {
-			board.CanWhiteCastleKingside = false
-			board.CanWhiteCastleQueenside = false
-			castleRightsChanged = true
-		} else if board.CanBlackCastleKingside || board.CanBlackCastleQueenside {
-			board.CanBlackCastleKingside = false
-			board.CanBlackCastleQueenside = false
-			castleRightsChanged = true
+		if move.Piece.IsWhite() {
+			boardBuilder.WithCanWhiteCastleKingside(false)
+			boardBuilder.WithCanWhiteCastleQueenside(false)
+		} else {
+			boardBuilder.WithCanBlackCastleKingside(false)
+			boardBuilder.WithCanBlackCastleQueenside(false)
 		}
 	}
-	return castleRightsChanged
 }
 
-func UpdateRepetitionsByFENMap(board *Board, move *Move, castleRightsChanged bool) uint8 {
+func UpdateRepetitionsByFENMap(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) uint8 {
+	castleRightsChanged := false
+	castleRightsChanged = castleRightsChanged || lastBoard.CanWhiteCastleKingside != boardBuilder.board.CanWhiteCastleKingside
+	castleRightsChanged = castleRightsChanged || lastBoard.CanWhiteCastleQueenside != boardBuilder.board.CanWhiteCastleQueenside
+	castleRightsChanged = castleRightsChanged || lastBoard.CanBlackCastleKingside != boardBuilder.board.CanBlackCastleKingside
+	castleRightsChanged = castleRightsChanged || lastBoard.CanBlackCastleQueenside != boardBuilder.board.CanBlackCastleQueenside
+
 	if move.Piece.IsPawn() || move.CapturedPiece != EMPTY || castleRightsChanged {
-		board.RepetitionsByMiniFEN = make(map[string]uint8)
+		boardBuilder.WithRepetitionsByMiniFEN(make(map[string]uint8))
 	}
-	miniFEN := board.ToMiniFEN()
-	repetitions, _ := board.RepetitionsByMiniFEN[miniFEN]
-	board.RepetitionsByMiniFEN[miniFEN] = repetitions + 1
+	miniFEN := boardBuilder.board.ToMiniFEN()
+	repetitions, _ := lastBoard.RepetitionsByMiniFEN[miniFEN]
+	boardBuilder.WithMiniFENCount(miniFEN, repetitions+1)
 	return repetitions + 1
 }
 
-func UpdateBoardIsTerminal(board *Board, repetitions uint8) {
-	if board.IsForcedDrawByMaterial() || board.HalfMoveClockCount >= 50 || repetitions >= 3 {
-		board.IsTerminal = true
-		return
-	}
-	if !board.HasLegalNextMove() {
-		board.IsTerminal = true
-		checkingSquares := GetCheckingSquares(board, board.IsWhiteTurn)
+func UpdateBoardIsTerminal(lastBoard *Board, boardBuilder *BoardBuilder, repetitions uint8) {
+	if boardBuilder.board.IsForcedDrawByMaterial() || boardBuilder.board.HalfMoveClockCount >= 50 || repetitions >= 3 {
+		boardBuilder.WithIsTerminal(true)
+	} else if !boardBuilder.board.HasLegalNextMove() {
+		boardBuilder.WithIsTerminal(true)
+		checkingSquares := GetCheckingSquares(boardBuilder.board, boardBuilder.board.IsWhiteTurn)
 		if len(*checkingSquares) > 0 {
-			if board.IsWhiteTurn {
-				board.IsBlackWinner = true
+			if boardBuilder.board.IsWhiteTurn {
+				boardBuilder.WithIsBlackWinner(true)
 			} else {
-				board.IsWhiteWinner = true
+				boardBuilder.WithIsWhiteWinner(true)
 			}
 		}
-		return
 	}
 }

@@ -19,7 +19,7 @@ var _ = Describe("Behaviorals", func() {
 				PawnUpgradedTo: chess.EMPTY,
 			}
 			Expect(chess.IsLegalMove(board, move)).To(BeTrue())
-			chess.UpdateBoardFromMove(board, move)
+			board = chess.GetBoardFromMove(board, move)
 			move = &chess.Move{
 				Piece:          chess.BLACK_PAWN,
 				StartSquare:    &chess.Square{Rank: 7, File: 5},
@@ -28,7 +28,7 @@ var _ = Describe("Behaviorals", func() {
 				PawnUpgradedTo: chess.EMPTY,
 			}
 			Expect(chess.IsLegalMove(board, move)).To(BeTrue())
-			chess.UpdateBoardFromMove(board, move)
+			board = chess.GetBoardFromMove(board, move)
 			move = &chess.Move{
 				Piece:          chess.WHITE_PAWN,
 				StartSquare:    &chess.Square{Rank: 2, File: 4},
@@ -37,7 +37,7 @@ var _ = Describe("Behaviorals", func() {
 				PawnUpgradedTo: chess.EMPTY,
 			}
 			Expect(chess.IsLegalMove(board, move)).To(BeTrue())
-			chess.UpdateBoardFromMove(board, move)
+			board = chess.GetBoardFromMove(board, move)
 			Expect(board.IsTerminal).To(BeFalse())
 		})
 	})

@@ -47,7 +47,7 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("there are multiple rooks on the board", func() {
 			It("returns the square of each rook that is checking the king", func() {
-				board, err := BoardFromFEN("3R2R1/8/2R5/2Rk2R1/4R3/2R5/R2R4/8 w - - 0 1")
+				board, err := BoardFromFEN("3R2R1/8/2R5/2Rk2R1/4R3/2R5/R2R4/7K w - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				rookSquares := GetCheckingSquares(board, false)
 				expSquares := []Square{
@@ -62,7 +62,7 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("there are multiple bishops on the board", func() {
 			It("returns the square of each bishop that is checking the king", func() {
-				board, err := BoardFromFEN("3BB2B/5B2/B2B1k1B/8/4BB1B/8/8/B7 w - - 0 1")
+				board, err := BoardFromFEN("3BB2B/5B2/B2B1k1B/8/4BB1B/8/8/B5K1 w - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				bishopSquares := GetCheckingSquares(board, false)
 				expSquares := []Square{
@@ -77,7 +77,7 @@ var _ = Describe("GameHelpers", func() {
 		When("there are multiple pawns on the board", func() {
 			Context("when the pawns are white", func() {
 				It("returns the square of each pawn that is checking the king", func() {
-					board, err := BoardFromFEN("3PP2P/4PPP1/P2PPkPP/4PPP1/4PP1P/8/8/P7 w - - 0 1")
+					board, err := BoardFromFEN("3PP2P/4PPP1/P2PPkPP/4PPP1/4PP1P/8/1K6/P7 w - - 0 1")
 					Expect(err).ToNot(HaveOccurred())
 					pawnSquares := GetCheckingSquares(board, false)
 					expSquares := []Square{
@@ -89,7 +89,7 @@ var _ = Describe("GameHelpers", func() {
 			})
 			Context("when the pawns are black", func() {
 				It("returns the square of each pawn that is checking the king", func() {
-					board, err := BoardFromFEN("3pp2p/4ppp1/p2ppKpp/4ppp1/4pp1p/8/8/p7 w - - 0 1")
+					board, err := BoardFromFEN("3pp2p/1k2ppp1/p2ppKpp/4ppp1/4pp1p/8/8/p7 w - - 0 1")
 					Expect(err).ToNot(HaveOccurred())
 					pawnSquares := GetCheckingSquares(board, true)
 					expSquares := []Square{
@@ -102,7 +102,7 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("there are multiple knights on the board", func() {
 			It("returns the square of each knight checking the king", func() {
-				board, err := BoardFromFEN("4NNN1/3NNNNN/2N2k1N/3N1N1N/4N1N1/8/8/5N2 w - - 0 1")
+				board, err := BoardFromFEN("4NNN1/3NNNNN/2N2k1N/3N1N1N/4N1N1/1K6/8/5N2 w - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				knightSquares := GetCheckingSquares(board, false)
 				expSquares := []Square{
@@ -120,7 +120,7 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("there are multiple queens on the board", func() {
 			It("returns the square of each knight checking the king", func() {
-				board, err := BoardFromFEN("3QQ1Q1/3Q1QQQ/Q4k1Q/3Q1QQQ/4Q1Q1/8/8/Q7 w - - 0 1")
+				board, err := BoardFromFEN("3QQ1Q1/3Q1QQQ/Q4k1Q/3Q1QQQ/4Q1Q1/8/5K2/Q7 w - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				queenSquares := GetCheckingSquares(board, false)
 				expSquares := []Square{
@@ -138,7 +138,7 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("only same color pieces as king exist", func() {
 			It("returns no checking squares", func() {
-				board, err := BoardFromFEN("3q4/4p3/2q2k2/4p3/3bn1n1/5r2/8/8 w - - 0 1")
+				board, err := BoardFromFEN("3q4/4p3/2q2k2/4p3/3bn1n1/5r2/1K6/8 w - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				checkingSquares := GetCheckingSquares(board, false)
 				Expect(*checkingSquares).To(HaveLen(0))
@@ -146,7 +146,7 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("all 'blockable' pieces are blocked", func() {
 			It("returns no checking squares", func() {
-				board, err := BoardFromFEN("3Q4/4n3/1Qq2kpR/6N1/7B/2N2N2/1B3R2/8 w - - 0 1")
+				board, err := BoardFromFEN("3Q4/4n3/1Qq2kpR/6N1/7B/2N2N2/1B3R2/3K4 w - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				checkingSquares := GetCheckingSquares(board, false)
 				Expect(*checkingSquares).To(HaveLen(0))
@@ -820,6 +820,23 @@ var _ = Describe("GameHelpers", func() {
 					})
 				})
 			})
+			Context("and the king is in check", func() {
+				var board *Board
+				BeforeEach(func() {
+					board, _ = BoardFromFEN("4k2r/8/8/8/8/4Q3/3R4/2K5 b k - 0 1")
+				})
+				It("does not return a king move to castle kingside", func() {
+					realMoves := GetLegalMovesForKing(board)
+					foundCastleMove := false
+					for _, realMove := range *realMoves {
+						if realMove.EndSquare.EqualTo(&Square{8, 7}) {
+							foundCastleMove = true
+							break
+						}
+					}
+					Expect(foundCastleMove).To(BeFalse())
+				})
+			})
 		})
 		When("the king has queenside castle rights", func() {
 			Context("and a piece occupies a square between the king and queenside rook", func() {
@@ -991,15 +1008,15 @@ var _ = Describe("GameHelpers", func() {
 			})
 		})
 	})
-	Describe("#UpdateBoardFromMove", func() {
+	Describe("#GetBoardFromMove", func() {
 		var board *Board
 		var move Move
 		When("the move is a capture", func() {
 			BeforeEach(func() {
-				board, _ = BoardFromFEN("k7/p2n4/8/8/6B1/8/8/7K w - - 0 1")
-				board.RepetitionsByMiniFEN["asdf"] = 2
+				initBoard, _ := BoardFromFEN("k7/p2n4/8/8/6B1/8/8/7K w - - 0 1")
+				initBoard.RepetitionsByMiniFEN["asdf"] = 2
 				move = Move{WHITE_BISHOP, &Square{4, 7}, &Square{7, 4}, BLACK_KNIGHT, make([]*Square, 0), EMPTY}
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(initBoard, &move)
 			})
 			It("resets the half move clock counter", func() {
 				Expect(board.HalfMoveClockCount).To(Equal(uint8(0)))
@@ -1019,10 +1036,12 @@ var _ = Describe("GameHelpers", func() {
 				Expect(ok).To(BeFalse())
 			})
 			Context("and the capture is an en passant move", func() {
-				It("moves the capturing piece to the en passant square and removes the en passanted pawn", func() {
-					board, _ = BoardFromFEN("k7/8/4pP2/8/8/8/8/7K w - e7 0 1")
+				BeforeEach(func() {
+					initBoard, _ := BoardFromFEN("k7/8/4pP2/8/8/8/8/7K w - e7 0 1")
 					move = Move{WHITE_PAWN, &Square{6, 6}, &Square{7, 5}, BLACK_PAWN, make([]*Square, 0), EMPTY}
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(initBoard, &move)
+				})
+				It("moves the capturing piece to the en passant square and removes the en passanted pawn", func() {
 					Expect(board.GetPieceOnSquare(&Square{6, 6})).To(Equal(EMPTY))
 					Expect(board.GetPieceOnSquare(&Square{6, 5})).To(Equal(EMPTY))
 					Expect(board.GetPieceOnSquare(&Square{7, 5})).To(Equal(WHITE_PAWN))
@@ -1031,10 +1050,10 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("the move is not a capture", func() {
 			BeforeEach(func() {
-				board, _ = BoardFromFEN("k7/4r3/8/8/8/8/5N2/7K w - - 0 1")
-				board.RepetitionsByMiniFEN["asdf"] = 2
+				initBoard, _ := BoardFromFEN("k7/4r3/8/8/8/8/5N2/7K w - - 0 1")
+				initBoard.RepetitionsByMiniFEN["asdf"] = 2
 				move = Move{WHITE_KNIGHT, &Square{2, 6}, &Square{3, 4}, EMPTY, make([]*Square, 0), EMPTY}
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(initBoard, &move)
 			})
 			It("moves the piece", func() {
 				Expect(board.GetPieceOnSquare(&Square{2, 6})).To(Equal(EMPTY))
@@ -1055,19 +1074,23 @@ var _ = Describe("GameHelpers", func() {
 				Expect(miniFENRepetitions).To(Equal(uint8(2)))
 			})
 			Context("and the pawn is being upgraded", func() {
-				It("converts the pawn to its upgraded piece", func() {
-					board, _ := BoardFromFEN("8/5P2/8/8/8/1kb5/8/7K w - - 0 1")
+				BeforeEach(func() {
+					initBoard, _ := BoardFromFEN("8/5P2/8/8/8/1kb5/8/7K w - - 0 1")
 					move := Move{WHITE_PAWN, &Square{7, 6}, &Square{8, 6}, EMPTY, make([]*Square, 0), WHITE_ROOK}
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(initBoard, &move)
+				})
+				It("converts the pawn to its upgraded piece", func() {
 					Expect(board.GetPieceOnSquare(&Square{8, 6})).To(Equal(WHITE_ROOK))
 					Expect(board.GetPieceOnSquare(&Square{7, 6})).To(Equal(EMPTY))
 				})
 			})
 			Context("and the move allows for en passant", func() {
-				It("sets the en passant square", func() {
-					board, _ := BoardFromFEN("8/8/8/8/7K/8/4P3/k7 w - - 0 1")
+				BeforeEach(func() {
+					initBoard, _ := BoardFromFEN("8/8/8/8/7K/8/4P3/k7 w - - 0 1")
 					move := Move{WHITE_PAWN, &Square{2, 5}, &Square{4, 5}, EMPTY, make([]*Square, 0), EMPTY}
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(initBoard, &move)
+				})
+				It("sets the en passant square", func() {
 					Expect(board.OptEnPassantSquare).ToNot(BeNil())
 					Expect(board.OptEnPassantSquare.EqualTo(&Square{3, 5}))
 				})
@@ -1075,9 +1098,9 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("its white's move", func() {
 			BeforeEach(func() {
-				board, _ = BoardFromFEN("8/8/8/8/7K/8/4P3/k7 w - - 0 1")
+				initBoard, _ := BoardFromFEN("8/8/8/8/7K/8/4P3/k7 w - - 0 1")
 				move = Move{WHITE_PAWN, &Square{2, 5}, &Square{4, 5}, EMPTY, make([]*Square, 0), EMPTY}
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(initBoard, &move)
 			})
 			It("sets the next turn to black", func() {
 				Expect(board.IsWhiteTurn).To(BeFalse())
@@ -1085,9 +1108,9 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("its black's move", func() {
 			BeforeEach(func() {
-				board, _ = BoardFromFEN("8/1r4k1/8/8/7K/8/4P3/8 b - - 0 1")
+				initBoard, _ := BoardFromFEN("8/1r4k1/8/8/7K/8/4P3/8 b - - 0 1")
 				move = Move{BLACK_ROOK, &Square{7, 2}, &Square{2, 2}, EMPTY, make([]*Square, 0), EMPTY}
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(initBoard, &move)
 			})
 			It("increments the full move counter", func() {
 				Expect(board.FullMoveCount).To(Equal(uint16(2)))
@@ -1114,7 +1137,7 @@ var _ = Describe("GameHelpers", func() {
 				Context("and the rook is the kingside rook", func() {
 					BeforeEach(func() {
 						move = Move{WHITE_ROOK, &Square{1, 8}, &Square{1, 7}, EMPTY, make([]*Square, 0), EMPTY}
-						UpdateBoardFromMove(board, &move)
+						board = GetBoardFromMove(board, &move)
 					})
 					It("revokes the white kingside castle right", func() {
 						Expect(board.CanWhiteCastleKingside).To(BeFalse())
@@ -1127,7 +1150,7 @@ var _ = Describe("GameHelpers", func() {
 				Context("and the rook is the queenside rook", func() {
 					BeforeEach(func() {
 						move = Move{WHITE_ROOK, &Square{1, 1}, &Square{1, 2}, EMPTY, make([]*Square, 0), EMPTY}
-						UpdateBoardFromMove(board, &move)
+						board = GetBoardFromMove(board, &move)
 					})
 					It("revokes the white queenside castle right", func() {
 						Expect(board.CanWhiteCastleQueenside).To(BeFalse())
@@ -1147,7 +1170,7 @@ var _ = Describe("GameHelpers", func() {
 					BeforeEach(func() {
 						Expect(board.CanBlackCastleKingside).To(BeTrue())
 						move = Move{BLACK_ROOK, &Square{8, 8}, &Square{8, 7}, EMPTY, make([]*Square, 0), EMPTY}
-						UpdateBoardFromMove(board, &move)
+						board = GetBoardFromMove(board, &move)
 					})
 					It("revokes the black kingside castle right", func() {
 						Expect(board.CanBlackCastleKingside).To(BeFalse())
@@ -1161,7 +1184,7 @@ var _ = Describe("GameHelpers", func() {
 					BeforeEach(func() {
 						Expect(board.CanBlackCastleQueenside).To(BeTrue())
 						move = Move{BLACK_ROOK, &Square{8, 1}, &Square{8, 2}, EMPTY, make([]*Square, 0), EMPTY}
-						UpdateBoardFromMove(board, &move)
+						board = GetBoardFromMove(board, &move)
 					})
 					It("revokes the black queenside castle right", func() {
 						Expect(board.CanBlackCastleQueenside).To(BeFalse())
@@ -1181,7 +1204,7 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.CanWhiteCastleKingside).To(BeTrue())
 					Expect(board.CanWhiteCastleQueenside).To(BeTrue())
 					move = Move{WHITE_KING, &Square{1, 5}, &Square{2, 4}, EMPTY, make([]*Square, 0), EMPTY}
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 				})
 				It("revokes both of white's castle rights", func() {
 					Expect(board.CanWhiteCastleKingside).To(BeFalse())
@@ -1198,7 +1221,7 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.CanBlackCastleKingside).To(BeTrue())
 					Expect(board.CanBlackCastleQueenside).To(BeTrue())
 					move = Move{BLACK_KING, &Square{8, 5}, &Square{8, 6}, EMPTY, make([]*Square, 0), EMPTY}
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 				})
 				It("revokes both of black's castle rights", func() {
 					Expect(board.CanBlackCastleKingside).To(BeFalse())
@@ -1222,24 +1245,24 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.GetPieceOnSquare(&Square{1, 8})).To(Equal(WHITE_ROOK))
 				})
 				It("re-positions the white king and king's rook", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.GetPieceOnSquare(&Square{1, 5})).To(Equal(EMPTY))
 					Expect(board.GetPieceOnSquare(&Square{1, 6})).To(Equal(WHITE_ROOK))
 					Expect(board.GetPieceOnSquare(&Square{1, 7})).To(Equal(WHITE_KING))
 					Expect(board.GetPieceOnSquare(&Square{1, 8})).To(Equal(EMPTY))
 				})
 				It("revokes castling rights for the active player", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.CanWhiteCastleKingside).To(BeFalse())
 					Expect(board.CanWhiteCastleQueenside).To(BeFalse())
 				})
 				It("clears the repetition counter map", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					_, ok := board.RepetitionsByMiniFEN["asdf"]
 					Expect(ok).To(BeFalse())
 				})
 				It("adds the current miniFEN to the repetition counter map", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					miniFEN := board.ToMiniFEN()
 					miniFENRepetitions, ok := board.RepetitionsByMiniFEN[miniFEN]
 					Expect(ok).To(BeTrue())
@@ -1256,24 +1279,24 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.GetPieceOnSquare(&Square{1, 1})).To(Equal(WHITE_ROOK))
 				})
 				It("re-positions the white king and queen's rook", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.GetPieceOnSquare(&Square{1, 5})).To(Equal(EMPTY))
 					Expect(board.GetPieceOnSquare(&Square{1, 4})).To(Equal(WHITE_ROOK))
 					Expect(board.GetPieceOnSquare(&Square{1, 3})).To(Equal(WHITE_KING))
 					Expect(board.GetPieceOnSquare(&Square{1, 1})).To(Equal(EMPTY))
 				})
 				It("revokes castling rights for the active player", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.CanWhiteCastleKingside).To(BeFalse())
 					Expect(board.CanWhiteCastleQueenside).To(BeFalse())
 				})
 				It("clears the repetition counter map", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					_, ok := board.RepetitionsByMiniFEN["asdf"]
 					Expect(ok).To(BeFalse())
 				})
 				It("adds the current miniFEN to the repetition counter map", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					miniFEN := board.ToMiniFEN()
 					miniFENRepetitions, ok := board.RepetitionsByMiniFEN[miniFEN]
 					Expect(ok).To(BeTrue())
@@ -1290,24 +1313,24 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.GetPieceOnSquare(&Square{8, 8})).To(Equal(BLACK_ROOK))
 				})
 				It("re-positions the black king and king's rook", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.GetPieceOnSquare(&Square{8, 5})).To(Equal(EMPTY))
 					Expect(board.GetPieceOnSquare(&Square{8, 6})).To(Equal(BLACK_ROOK))
 					Expect(board.GetPieceOnSquare(&Square{8, 7})).To(Equal(BLACK_KING))
 					Expect(board.GetPieceOnSquare(&Square{8, 8})).To(Equal(EMPTY))
 				})
 				It("revokes castling rights for the active player", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.CanBlackCastleKingside).To(BeFalse())
 					Expect(board.CanBlackCastleQueenside).To(BeFalse())
 				})
 				It("clears the repetition counter map", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					_, ok := board.RepetitionsByMiniFEN["asdf"]
 					Expect(ok).To(BeFalse())
 				})
 				It("adds the current miniFEN to the repetition counter map", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					miniFEN := board.ToMiniFEN()
 					miniFENRepetitions, ok := board.RepetitionsByMiniFEN[miniFEN]
 					Expect(ok).To(BeTrue())
@@ -1324,24 +1347,24 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.GetPieceOnSquare(&Square{8, 1})).To(Equal(BLACK_ROOK))
 				})
 				It("re-positions the black king and queen's rook", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.GetPieceOnSquare(&Square{8, 5})).To(Equal(EMPTY))
 					Expect(board.GetPieceOnSquare(&Square{8, 4})).To(Equal(BLACK_ROOK))
 					Expect(board.GetPieceOnSquare(&Square{8, 3})).To(Equal(BLACK_KING))
 					Expect(board.GetPieceOnSquare(&Square{8, 1})).To(Equal(EMPTY))
 				})
 				It("revokes castling rights for the active player", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.CanBlackCastleKingside).To(BeFalse())
 					Expect(board.CanBlackCastleQueenside).To(BeFalse())
 				})
 				It("clears the repetition counter map", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					_, ok := board.RepetitionsByMiniFEN["asdf"]
 					Expect(ok).To(BeFalse())
 				})
 				It("adds the current miniFEN to the repetition counter map", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					miniFEN := board.ToMiniFEN()
 					miniFENRepetitions, ok := board.RepetitionsByMiniFEN[miniFEN]
 					Expect(ok).To(BeTrue())
@@ -1356,14 +1379,14 @@ var _ = Describe("GameHelpers", func() {
 				board.RepetitionsByMiniFEN["8/8/4k3/8/4K3/4P3/8/8 b - -"] = 2
 			})
 			It("increments the board repetitions counter map", func() {
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(board, &move)
 				miniFEN := "8/8/4k3/8/4K3/4P3/8/8 b - -"
 				miniFENRepetitions, ok := board.RepetitionsByMiniFEN[miniFEN]
 				Expect(ok).To(BeTrue())
 				Expect(miniFENRepetitions).To(Equal(uint8(3)))
 			})
 			It("results in a terminal draw state", func() {
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(board, &move)
 				Expect(board.IsTerminal).To(BeTrue())
 				Expect(board.IsWhiteWinner).To(BeFalse())
 				Expect(board.IsBlackWinner).To(BeFalse())
@@ -1375,7 +1398,7 @@ var _ = Describe("GameHelpers", func() {
 				move = Move{WHITE_QUEEN, &Square{8, 6}, &Square{2, 6}, EMPTY, make([]*Square, 0), EMPTY}
 			})
 			It("results in a terminal draw board", func() {
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(board, &move)
 				Expect(board.IsTerminal).To(BeTrue())
 				Expect(board.IsWhiteWinner).To(BeFalse())
 				Expect(board.IsBlackWinner).To(BeFalse())
@@ -1388,7 +1411,7 @@ var _ = Describe("GameHelpers", func() {
 				move = Move{WHITE_KNIGHT, &Square{1, 2}, &Square{3, 3}, EMPTY, make([]*Square, 0), EMPTY}
 			})
 			It("results in a terminal draw board", func() {
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(board, &move)
 				Expect(board.IsTerminal).To(BeTrue())
 				Expect(board.IsWhiteWinner).To(BeFalse())
 				Expect(board.IsBlackWinner).To(BeFalse())
@@ -1401,7 +1424,7 @@ var _ = Describe("GameHelpers", func() {
 				move = Move{WHITE_KNIGHT, &Square{5, 6}, &Square{3, 7}, BLACK_QUEEN, []*Square{{3, 7}}, EMPTY}
 			})
 			It("results in a terminal draw board", func() {
-				UpdateBoardFromMove(board, &move)
+				board = GetBoardFromMove(board, &move)
 				Expect(board.IsTerminal).To(BeTrue())
 				Expect(board.IsWhiteWinner).To(BeFalse())
 				Expect(board.IsBlackWinner).To(BeFalse())
@@ -1414,7 +1437,7 @@ var _ = Describe("GameHelpers", func() {
 					move = Move{WHITE_QUEEN, &Square{3, 2}, &Square{7, 2}, EMPTY, []*Square{{7, 2}}, EMPTY}
 				})
 				It("results in a terminal board", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.IsTerminal).To(BeTrue())
 					Expect(board.IsWhiteWinner).To(BeTrue())
 					Expect(board.IsBlackWinner).To(BeFalse())
@@ -1426,7 +1449,7 @@ var _ = Describe("GameHelpers", func() {
 					move = Move{BLACK_QUEEN, &Square{2, 5}, &Square{4, 3}, EMPTY, []*Square{{4, 3}}, EMPTY}
 				})
 				It("results in a terminal board", func() {
-					UpdateBoardFromMove(board, &move)
+					board = GetBoardFromMove(board, &move)
 					Expect(board.IsTerminal).To(BeTrue())
 					Expect(board.IsWhiteWinner).To(BeFalse())
 					Expect(board.IsBlackWinner).To(BeTrue())
@@ -1434,20 +1457,24 @@ var _ = Describe("GameHelpers", func() {
 			})
 		})
 	})
-	Describe("#UpdateBoardPiecesFromMove", func() {
+	Describe("#UpdatePiecesFromMove", func() {
 		var board *Board
+		var boardBuilder *BoardBuilder
 		var move *Move
 		BeforeEach(func() {
 			board, _ = BoardFromFEN("r1bqkb1r/ppp2ppp/2n2n2/1N1pp3/3P1B2/8/PPP1PPPP/R2QKBNR w KQkq - 0 1")
+			boardBuilder = NewBoardBuilder().FromBoard(board)
 			move = &Move{WHITE_PAWN, &Square{4, 4}, &Square{5, 5}, BLACK_PAWN, make([]*Square, 0), EMPTY}
 		})
 		It("moves the piece", func() {
-			UpdateBoardPiecesFromMove(board, move)
+			UpdatePiecesFromMove(board, boardBuilder, move)
+			board := boardBuilder.Build()
 			Expect(board.GetPieceOnSquare(&Square{4, 4})).To(Equal(EMPTY))
 			Expect(board.GetPieceOnSquare(&Square{5, 5})).To(Equal(WHITE_PAWN))
 		})
 		It("updates the cached material count", func() {
-			UpdateBoardFromMove(board, move)
+			UpdatePiecesFromMove(board, boardBuilder, move)
+			board := boardBuilder.Build()
 			Expect(board.ComputeMaterialCount().BlackPawnCount).To(Equal(uint8(7)))
 		})
 	})

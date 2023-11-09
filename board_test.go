@@ -170,7 +170,7 @@ var _ = Describe("Board", func() {
 		Expect(generatedFEN).To(Equal(fen))
 	},
 		Entry("initial board", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
-		Entry("no castle rights", "3R2R1/8/2R5/2Rk2R1/4R3/2R5/R2R4/8 w - - 0 1"),
+		Entry("no castle rights", "3R2R1/8/2R5/2Rk2R1/4R3/2R5/R2R4/7K w - - 0 1"),
 		Entry("en passant square", "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"),
 		Entry("move counters boosted", "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 25 30"),
 	)
@@ -202,7 +202,7 @@ var _ = Describe("Board", func() {
 			})
 			When("the FEN specifies that neither player has castle rights", func() {
 				It("returns a board with all castle rights revoked", func() {
-					fen := "3R2R1/8/2R5/2Rk2R1/4R3/2R5/R2R4/8 w - - 0 1"
+					fen := "3R2R1/8/2R5/2Rk2R1/4R3/2R5/R2R4/7K w - - 0 1"
 					board, err := BoardFromFEN(fen)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(board.CanWhiteCastleQueenside).To(BeFalse())
@@ -345,7 +345,7 @@ var _ = Describe("Board", func() {
 		When("the board is not the initial board", func() {
 			It("returns false", func() {
 				board := GetInitBoard()
-				UpdateBoardFromMove(board, &Move{WHITE_PAWN, &Square{2, 1}, &Square{4, 1}, EMPTY, nil, EMPTY})
+				board = GetBoardFromMove(board, &Move{WHITE_PAWN, &Square{2, 1}, &Square{4, 1}, EMPTY, nil, EMPTY})
 				Expect(board.IsInitBoard()).To(BeFalse())
 			})
 		})
