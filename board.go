@@ -241,6 +241,24 @@ func (board *Board) IsBlackCheckmated() bool {
 	return board.IsTerminal && board.IsWhiteWinner
 }
 
+func (board *Board) IsDrawByStalemate() bool {
+	return board.IsTerminal && !board.IsWhiteWinner && !board.IsBlackWinner && !board.HasLegalNextMove()
+}
+
+func (board *Board) IsDrawByFiftyMoveRule() bool {
+	return board.IsTerminal && board.HalfMoveClockCount >= 50
+}
+
+func (board *Board) IsDrawByThreefoldRepetition() bool {
+	if !board.IsTerminal || board.IsWhiteWinner || board.IsBlackWinner {
+		return false
+	}
+	if board.IsForcedDrawByMaterial() || board.IsDrawByStalemate() || board.IsDrawByFiftyMoveRule() {
+		return false
+	}
+	return true
+}
+
 func (board *Board) HasLegalNextMove() bool {
 	moves := GetLegalMovesForKing(board)
 	if len(*moves) == 0 {

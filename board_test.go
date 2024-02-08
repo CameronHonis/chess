@@ -177,6 +177,104 @@ var _ = Describe("Board", func() {
 			})
 		})
 	})
+	Describe("::IsDrawByStalemate", func() {
+		When("there is no stalemate", func() {
+			When("the board is the initial board", func() {
+				It("returns false", func() {
+					board := GetInitBoard()
+					Expect(board.IsDrawByStalemate()).To(BeFalse())
+				})
+			})
+			When("white is in check", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("K7/q7/3k4/8/8/8/8/8 w - - 0 1")
+					Expect(board.IsDrawByStalemate()).To(BeFalse())
+				})
+			})
+			When("the board is terminal due to the fifty move rule", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("K7/8/3k1r2/8/8/8/8/8 w - - 50 102")
+					Expect(board.IsDrawByStalemate()).To(BeFalse())
+				})
+			})
+		})
+		When("white is stalemated", func() {
+			It("returns true", func() {
+				board, _ := BoardFromFEN("K7/8/1qk5/8/8/8/8/8 w - - 0 1")
+				Expect(board.IsDrawByStalemate()).To(BeTrue())
+			})
+		})
+		When("black is stalemated", func() {
+			It("returns true", func() {
+				board, _ := BoardFromFEN("k7/8/1QK5/8/8/8/8/8 b - - 0 1")
+				Expect(board.IsDrawByStalemate()).To(BeTrue())
+			})
+		})
+	})
+	Describe("::IsDrawByFiftyMoveRule", func() {
+		When("the fifty move rule has not been reached", func() {
+			It("returns false", func() {
+				board := GetInitBoard()
+				Expect(board.IsDrawByFiftyMoveRule()).To(BeFalse())
+			})
+		})
+		When("the fifty move rule has been reached", func() {
+			It("returns true", func() {
+				board, _ := BoardFromFEN("K7/8/3k1r2/8/8/8/8/8 w - - 50 102")
+				Expect(board.IsDrawByFiftyMoveRule()).To(BeTrue())
+			})
+		})
+	})
+	Describe("::IsDrawByThreefoldRepetition", func() {
+		When("the board is terminal", func() {
+			When("white is checkmated", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("K7/1q6/2k2r2/8/8/8/8/8 w - - 0 1")
+					Expect(board.IsDrawByThreefoldRepetition()).To(BeFalse())
+				})
+			})
+			When("black is checkmated", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("k7/1Q6/2K2R2/8/8/8/8/8 w - - 0 1")
+					Expect(board.IsDrawByThreefoldRepetition()).To(BeFalse())
+				})
+			})
+			When("the board is a draw by stalemate", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("K7/8/k7/8/8/8/8/1r6 w - - 0 1")
+					Expect(board.IsDrawByThreefoldRepetition()).To(BeFalse())
+				})
+			})
+			When("the board is a draw by the fifty move rule", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("K7/8/8/8/8/5k2/6q1/8 w - - 50 102")
+					Expect(board.IsDrawByThreefoldRepetition()).To(BeFalse())
+				})
+			})
+			When("the board is a draw by insufficient material", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("K7/8/2k5/8/8/8/8/8 w - - 0 1")
+					Expect(board.IsDrawByThreefoldRepetition()).To(BeFalse())
+				})
+			})
+			When("the board is a draw by threefold repetition", func() {
+				var board *Board
+				BeforeEach(func() {
+					board = GetInitBoard()
+					board.IsTerminal = true // pretend both players shuffle around the same knights 3 times
+				})
+				It("returns true", func() {
+					Expect(board.IsDrawByFiftyMoveRule())
+				})
+			})
+		})
+		When("the board is not terminal", func() {
+			It("returns false", func() {
+				board := GetInitBoard()
+				Expect(board.IsDrawByThreefoldRepetition()).To(BeFalse())
+			})
+		})
+	})
 	Describe("::HasLegalNextMove", func() {
 		var board *Board
 		When("the board represents a stalemate", func() {
