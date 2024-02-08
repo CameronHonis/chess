@@ -109,6 +109,74 @@ var _ = Describe("Board", func() {
 			})
 		})
 	})
+	Describe("::IsWhiteCheckmated", func() {
+		When("neither player is checkmated", func() {
+			When("the board is the initial board", func() {
+				It("returns false", func() {
+					board := GetInitBoard()
+					Expect(board.IsWhiteCheckmated()).To(BeFalse())
+				})
+			})
+			When("white is in check, but has legal moves to escape", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("4K3/4q3/8/8/8/5k2/8/8 w - - 0 1")
+					Expect(board.IsWhiteCheckmated()).To(BeFalse())
+				})
+			})
+			When("white is in stalemate", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("K7/8/1q6/8/8/5k2/8/8 w - - 0 1")
+					Expect(board.IsWhiteCheckmated()).To(BeFalse())
+				})
+			})
+		})
+		When("white is checkmated", func() {
+			It("returns true", func() {
+				board, _ := BoardFromFEN("K7/1q6/2k5/8/8/8/8/8 w - - 0 1")
+				Expect(board.IsWhiteCheckmated()).To(BeTrue())
+			})
+		})
+		When("black is checkmated", func() {
+			It("returns false", func() {
+				board, _ := BoardFromFEN("k7/1Q6/2K5/8/8/8/8/8 w - - 0 1") // note it is white's turn
+				Expect(board.IsWhiteCheckmated()).To(BeFalse())
+			})
+		})
+	})
+	Describe("::IsBlackCheckmated", func() {
+		When("neither player is checkmated", func() {
+			When("the board is the initial board", func() {
+				It("returns false", func() {
+					board := GetInitBoard()
+					Expect(board.IsBlackCheckmated()).To(BeFalse())
+				})
+			})
+			When("black is in check, but has legal moves to escape", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("4k3/4Q3/8/8/8/5K2/8/8 b - - 0 1")
+					Expect(board.IsBlackCheckmated()).To(BeFalse())
+				})
+			})
+			When("black is in stalemate", func() {
+				It("returns false", func() {
+					board, _ := BoardFromFEN("k7/8/1Q6/8/8/5K2/8/8 b - - 0 1")
+					Expect(board.IsBlackCheckmated()).To(BeFalse())
+				})
+			})
+		})
+		When("black is checkmated", func() {
+			It("returns true", func() {
+				board, _ := BoardFromFEN("k7/1Q6/2K5/8/8/8/8/8 b - - 0 1")
+				Expect(board.IsBlackCheckmated()).To(BeTrue())
+			})
+		})
+		When("white is checkmated", func() {
+			It("returns false", func() {
+				board, _ := BoardFromFEN("K7/1q6/2k5/8/8/8/8/8 b - - 0 1") // note it is black's turn
+				Expect(board.IsBlackCheckmated()).To(BeFalse())
+			})
+		})
+	})
 	Describe("::HasLegalNextMove", func() {
 		var board *Board
 		When("the board represents a stalemate", func() {

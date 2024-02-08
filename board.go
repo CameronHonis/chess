@@ -233,6 +233,14 @@ func (board *Board) IsForcedDrawByMaterial() bool {
 	return true
 }
 
+func (board *Board) IsWhiteCheckmated() bool {
+	return board.IsTerminal && board.IsBlackWinner
+}
+
+func (board *Board) IsBlackCheckmated() bool {
+	return board.IsTerminal && board.IsWhiteWinner
+}
+
 func (board *Board) HasLegalNextMove() bool {
 	moves := GetLegalMovesForKing(board)
 	if len(*moves) == 0 {
