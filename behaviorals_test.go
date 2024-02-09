@@ -38,7 +38,7 @@ var _ = Describe("Behaviorals", func() {
 			}
 			Expect(chess.IsLegalMove(board, move)).To(BeTrue())
 			board = chess.GetBoardFromMove(board, move)
-			Expect(board.IsTerminal).To(BeFalse())
+			Expect(board.Result).To(Equal(chess.BOARD_RESULT_IN_PROGRESS))
 		})
 	})
 })

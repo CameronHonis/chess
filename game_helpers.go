@@ -125,7 +125,7 @@ func addKingChecksToMoves(board *Board, moves *[]*Move) {
 	}
 }
 func GetLegalMovesForPawn(board *Board, square *Square) (*[]*Move, error) {
-	if board.IsTerminal {
+	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
 		return &emptyMoves, nil
 	}
@@ -224,7 +224,7 @@ func GetLegalMovesForPawn(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForKnight(board *Board, square *Square) (*[]*Move, error) {
-	if board.IsTerminal {
+	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
 		return &emptyMoves, nil
 	}
@@ -264,7 +264,7 @@ func GetLegalMovesForKnight(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForBishop(board *Board, square *Square) (*[]*Move, error) {
-	if board.IsTerminal {
+	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
 		return &emptyMoves, nil
 	}
@@ -302,7 +302,7 @@ func GetLegalMovesForBishop(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForRook(board *Board, square *Square) (*[]*Move, error) {
-	if board.IsTerminal {
+	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
 		return &emptyMoves, nil
 	}
@@ -340,7 +340,7 @@ func GetLegalMovesForRook(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForQueen(board *Board, square *Square) (*[]*Move, error) {
-	if board.IsTerminal {
+	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
 		return &emptyMoves, nil
 	}
@@ -378,7 +378,7 @@ func GetLegalMovesForQueen(board *Board, square *Square) (*[]*Move, error) {
 }
 
 func GetLegalMovesForKing(board *Board) *[]*Move {
-	if board.IsTerminal {
+	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
 		return &emptyMoves
 	}
@@ -470,13 +470,13 @@ func IsLegalMove(board *Board, move *Move) bool {
 }
 
 func GetLegalMoves(board *Board, stopAtFirst bool) (*[8][8][]*Move, uint8) {
-	// for the active player, it returns:
+	//for the active player, it returns:
 	//	1. A 2d array which maps to board squares, where the element type
 	//	   is a slice of legal moves for that piece in that square
-	//  2. The total count of all legal moves
+	// 2. The total count of all legal moves
 	var boardMoves [8][8][]*Move
 	movesCount := uint8(0)
-	if board.IsTerminal {
+	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		return &boardMoves, movesCount
 	}
 	for rank := uint8(1); rank < 9; rank++ {
@@ -591,7 +591,7 @@ func GetBoardFromMove(board *Board, move *Move) *Board {
 
 	UpdateCastleRights(board, boardBuilder, move)
 	repetitions := UpdateRepetitionsByFENMap(board, boardBuilder, move)
-	UpdateBoardIsTerminal(board, boardBuilder, repetitions)
+	UpdateBoardResult(board, boardBuilder, repetitions)
 
 	return boardBuilder.Build()
 }
@@ -696,18 +696,23 @@ func UpdateRepetitionsByFENMap(lastBoard *Board, boardBuilder *BoardBuilder, mov
 	return repetitions + 1
 }
 
-func UpdateBoardIsTerminal(lastBoard *Board, boardBuilder *BoardBuilder, repetitions uint8) {
-	if boardBuilder.board.IsForcedDrawByMaterial() || boardBuilder.board.HalfMoveClockCount >= 50 || repetitions >= 3 {
-		boardBuilder.WithIsTerminal(true)
+func UpdateBoardResult(lastBoard *Board, boardBuilder *BoardBuilder, repetitions uint8) {
+	if repetitions >= 3 {
+		boardBuilder.WithResult(BOARD_RESULT_DRAW_BY_THREEFOLD_REPETITION)
+	} else if boardBuilder.board.HalfMoveClockCount >= 50 {
+		boardBuilder.WithResult(BOARD_RESULT_DRAW_BY_FIFTY_MOVE_RULE)
 	} else if !boardBuilder.board.HasLegalNextMove() {
-		boardBuilder.WithIsTerminal(true)
 		checkingSquares := GetCheckingSquares(boardBuilder.board, boardBuilder.board.IsWhiteTurn)
 		if len(*checkingSquares) > 0 {
-			if boardBuilder.board.IsWhiteTurn {
-				boardBuilder.WithIsBlackWinner(true)
+			if lastBoard.IsWhiteTurn {
+				boardBuilder.WithResult(BOARD_RESULT_WHITE_WINS_BY_CHECKMATE)
 			} else {
-				boardBuilder.WithIsWhiteWinner(true)
+				boardBuilder.WithResult(BOARD_RESULT_BLACK_WINS_BY_CHECKMATE)
 			}
+		} else {
+			boardBuilder.WithResult(BOARD_RESULT_DRAW_BY_STALEMATE)
 		}
+	} else if boardBuilder.board.IsForcedDrawByMaterial() {
+		boardBuilder.WithResult(BOARD_RESULT_DRAW_BY_INSUFFICIENT_MATERIAL)
 	}
 }

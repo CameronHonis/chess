@@ -427,9 +427,8 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("the board is a terminal board", func() {
 			It("returns no moves", func() {
-				board := GetInitBoard()
-				board.IsTerminal = true
-				realMoves, err := GetLegalMovesForPawn(board, &Square{2, 2})
+				board, _ := BoardFromFEN("k6p/8/8/8/8/8/8/RQ4K1 b - - 0 1")
+				realMoves, err := GetLegalMovesForPawn(board, &Square{8, 8})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(*realMoves).To(HaveLen(0))
 			})
@@ -502,9 +501,8 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("the board is a terminal board", func() {
 			It("returns no moves", func() {
-				board := GetInitBoard()
-				board.IsTerminal = true
-				realMoves, err := GetLegalMovesForKnight(board, &Square{1, 2})
+				board, _ := BoardFromFEN("k6n/8/8/8/8/8/8/RQ4K1 b - - 0 1")
+				realMoves, err := GetLegalMovesForKnight(board, &Square{8, 8})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(*realMoves).To(HaveLen(0))
 			})
@@ -573,9 +571,8 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("the board is a terminal board", func() {
 			It("returns no moves", func() {
-				board, _ := BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/8/1P6/P1PPPPPP/RNBQKBNR w KQkq - 0 1")
-				board.IsTerminal = true
-				realMoves, err := GetLegalMovesForBishop(board, &Square{1, 3})
+				board, _ := BoardFromFEN("k6b/8/8/8/8/8/R7/1Q4K1 b - - 0 1")
+				realMoves, err := GetLegalMovesForBishop(board, &Square{8, 8})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(*realMoves).To(HaveLen(0))
 			})
@@ -632,8 +629,7 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("the board is a terminal board", func() {
 			It("returns no moves", func() {
-				board, _ := BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1")
-				board.IsTerminal = true
+				board, _ := BoardFromFEN("k6r/8/8/8/8/8/8/RQ4K1 b - - 0 1")
 				realMoves, err := GetLegalMovesForRook(board, &Square{1, 1})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(*realMoves).To(HaveLen(0))
@@ -708,9 +704,8 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("the board is a terminal board", func() {
 			It("returns no moves", func() {
-				board, _ := BoardFromFEN("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1")
-				board.IsTerminal = true
-				realMoves, err := GetLegalMovesForQueen(board, &Square{1, 4})
+				board, _ := BoardFromFEN("k6q/8/8/8/8/8/R7/1Q4K1 b - - 0 1")
+				realMoves, err := GetLegalMovesForQueen(board, &Square{8, 8})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(*realMoves).To(HaveLen(0))
 			})
@@ -901,8 +896,7 @@ var _ = Describe("GameHelpers", func() {
 		})
 		When("the board is a terminal board", func() {
 			It("returns no moves", func() {
-				board, _ := BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1")
-				board.IsTerminal = true
+				board, _ := BoardFromFEN("k7/8/8/8/8/8/8/RQ4K1 b - - 0 1")
 				realMoves := GetLegalMovesForKing(board)
 				Expect(*realMoves).To(HaveLen(0))
 			})
@@ -1387,9 +1381,7 @@ var _ = Describe("GameHelpers", func() {
 			})
 			It("results in a terminal draw state", func() {
 				board = GetBoardFromMove(board, &move)
-				Expect(board.IsTerminal).To(BeTrue())
-				Expect(board.IsWhiteWinner).To(BeFalse())
-				Expect(board.IsBlackWinner).To(BeFalse())
+				Expect(board.Result).To(Equal(BOARD_RESULT_DRAW_BY_THREEFOLD_REPETITION))
 			})
 		})
 		When("the resulting board is a stalemate", func() {
@@ -1399,9 +1391,7 @@ var _ = Describe("GameHelpers", func() {
 			})
 			It("results in a terminal draw board", func() {
 				board = GetBoardFromMove(board, &move)
-				Expect(board.IsTerminal).To(BeTrue())
-				Expect(board.IsWhiteWinner).To(BeFalse())
-				Expect(board.IsBlackWinner).To(BeFalse())
+				Expect(board.Result).To(Equal(BOARD_RESULT_DRAW_BY_STALEMATE))
 			})
 		})
 		When("the move violates the 50-move rule", func() {
@@ -1412,22 +1402,18 @@ var _ = Describe("GameHelpers", func() {
 			})
 			It("results in a terminal draw board", func() {
 				board = GetBoardFromMove(board, &move)
-				Expect(board.IsTerminal).To(BeTrue())
-				Expect(board.IsWhiteWinner).To(BeFalse())
-				Expect(board.IsBlackWinner).To(BeFalse())
+				Expect(board.Result).To(Equal(BOARD_RESULT_DRAW_BY_FIFTY_MOVE_RULE))
 			})
 		})
 		When("the remaining material forces a draw", func() {
 			BeforeEach(func() {
 				board, _ = BoardFromFEN("8/8/8/5N2/1K6/6q1/8/7k w - - 1 1")
-				Expect(board.IsTerminal).To(BeFalse())
+				Expect(board.Result).To(Equal(BOARD_RESULT_IN_PROGRESS))
 				move = Move{WHITE_KNIGHT, &Square{5, 6}, &Square{3, 7}, BLACK_QUEEN, []*Square{{3, 7}}, EMPTY}
 			})
 			It("results in a terminal draw board", func() {
 				board = GetBoardFromMove(board, &move)
-				Expect(board.IsTerminal).To(BeTrue())
-				Expect(board.IsWhiteWinner).To(BeFalse())
-				Expect(board.IsBlackWinner).To(BeFalse())
+				Expect(board.Result).To(Equal(BOARD_RESULT_DRAW_BY_INSUFFICIENT_MATERIAL))
 			})
 		})
 		When("the move is a checkmate", func() {
@@ -1438,9 +1424,7 @@ var _ = Describe("GameHelpers", func() {
 				})
 				It("results in a terminal board", func() {
 					board = GetBoardFromMove(board, &move)
-					Expect(board.IsTerminal).To(BeTrue())
-					Expect(board.IsWhiteWinner).To(BeTrue())
-					Expect(board.IsBlackWinner).To(BeFalse())
+					Expect(board.Result).To(Equal(BOARD_RESULT_WHITE_WINS_BY_CHECKMATE))
 				})
 			})
 			Context("and the checkmating player is black", func() {
@@ -1450,9 +1434,7 @@ var _ = Describe("GameHelpers", func() {
 				})
 				It("results in a terminal board", func() {
 					board = GetBoardFromMove(board, &move)
-					Expect(board.IsTerminal).To(BeTrue())
-					Expect(board.IsWhiteWinner).To(BeFalse())
-					Expect(board.IsBlackWinner).To(BeTrue())
+					Expect(board.Result).To(Equal(BOARD_RESULT_BLACK_WINS_BY_CHECKMATE))
 				})
 			})
 		})

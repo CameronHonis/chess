@@ -93,17 +93,8 @@ func (bb *BoardBuilder) WithMiniFENCount(miniFEN string, count uint8) *BoardBuil
 	return bb
 }
 
-func (bb *BoardBuilder) WithIsTerminal(isTerminal bool) *BoardBuilder {
-	bb.board.IsTerminal = isTerminal
-	return bb
-}
-
-func (bb *BoardBuilder) WithIsWhiteWinner(isWhiteWinner bool) *BoardBuilder {
-	bb.board.IsWhiteWinner = isWhiteWinner
-	return bb
-}
-func (bb *BoardBuilder) WithIsBlackWinner(isBlackWinner bool) *BoardBuilder {
-	bb.board.IsBlackWinner = isBlackWinner
+func (bb *BoardBuilder) WithResult(result BoardResult) *BoardBuilder {
+	bb.board.Result = result
 	return bb
 }
 

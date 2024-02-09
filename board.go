@@ -18,9 +18,7 @@ type Board struct {
 	HalfMoveClockCount      uint8            `json:"halfMoveClockCount"`
 	FullMoveCount           uint16           `json:"fullMoveCount"`
 	RepetitionsByMiniFEN    map[string]uint8 `json:"repetitionsByMiniFEN"`
-	IsTerminal              bool             `json:"isTerminal"`
-	IsWhiteWinner           bool             `json:"isWhiteWinner"`
-	IsBlackWinner           bool             `json:"isBlackWinner"`
+	Result                  BoardResult      `json:"result"`
 	// memoizers
 	optMaterialCount   *MaterialCount
 	optWhiteKingSquare *Square
@@ -37,14 +35,14 @@ func NewBoard(pieces *[8][8]Piece,
 	halfMoveClockCount uint8,
 	fullMoveCount uint16,
 	repetitionsByMiniFEN map[string]uint8,
-	isTerminal bool,
-	isWhiteWinner bool,
-	isBlackWinner bool) *Board {
+	result BoardResult,
+) *Board {
 	return &Board{
 		*pieces, enPassantSquare, isWhiteTurn,
 		canWhiteCastleQueenside, canWhiteCastleKingside,
 		canBlackCastleQueenside, canBlackCastleKingside,
-		halfMoveClockCount, fullMoveCount, repetitionsByMiniFEN, isTerminal, isWhiteWinner, isBlackWinner, nil, nil, nil,
+		halfMoveClockCount, fullMoveCount, repetitionsByMiniFEN,
+		result, nil, nil, nil,
 	}
 }
 
@@ -78,6 +76,8 @@ func BoardFromFEN(fen string) (*Board, error) {
 	if len(fenSegs) != 6 {
 		return nil, fmt.Errorf("invalid FEN: wrong number of FEN segments. Expected 6 vs. actual %d", len(fenSegs))
 	}
+	miniFEN := strings.Join(fenSegs[:4], " ")
+	boardBuilder.WithRepetitionsByMiniFEN(map[string]uint8{miniFEN: uint8(1)})
 	for fenSegIdx, fenSeg := range fenSegs {
 		if fenSegIdx == 0 {
 			materialCountBuilder := NewMaterialCountBuilder()
@@ -174,7 +174,10 @@ func BoardFromFEN(fen string) (*Board, error) {
 			boardBuilder.WithFullMoveCount(uint16(fullMoveCount))
 		}
 	}
-	UpdateBoardIsTerminal(boardBuilder.board, boardBuilder, 0)
+
+	boardBuilder.WithResult(BOARD_RESULT_IN_PROGRESS)
+	prevBoard := NewBoardBuilder().FromBoard(boardBuilder.Build()).WithIsWhiteTurn(!boardBuilder.board.IsWhiteTurn).Build()
+	UpdateBoardResult(prevBoard, boardBuilder, 0)
 	return boardBuilder.Build(), nil
 }
 
@@ -193,7 +196,7 @@ func GetInitBoard() *Board {
 		{BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN},
 		{BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK},
 	}, nil, true, true, true, true,
-		true, 0, 1, repetitionsByMiniFEN, false, false, false)
+		true, 0, 1, repetitionsByMiniFEN, BOARD_RESULT_IN_PROGRESS)
 }
 
 func (board *Board) GetPieceOnSquare(square *Square) Piece {
@@ -228,32 +231,6 @@ func (board *Board) IsForcedDrawByMaterial() bool {
 	}
 	blackBishopCount := mat.BlackLightBishopCount + mat.BlackDarkBishopCount
 	if blackBishopCount > 0 && mat.BlackKnightCount > 0 {
-		return false
-	}
-	return true
-}
-
-func (board *Board) IsWhiteCheckmated() bool {
-	return board.IsTerminal && board.IsBlackWinner
-}
-
-func (board *Board) IsBlackCheckmated() bool {
-	return board.IsTerminal && board.IsWhiteWinner
-}
-
-func (board *Board) IsDrawByStalemate() bool {
-	return board.IsTerminal && !board.IsWhiteWinner && !board.IsBlackWinner && !board.HasLegalNextMove()
-}
-
-func (board *Board) IsDrawByFiftyMoveRule() bool {
-	return board.IsTerminal && board.HalfMoveClockCount >= 50
-}
-
-func (board *Board) IsDrawByThreefoldRepetition() bool {
-	if !board.IsTerminal || board.IsWhiteWinner || board.IsBlackWinner {
-		return false
-	}
-	if board.IsForcedDrawByMaterial() || board.IsDrawByStalemate() || board.IsDrawByFiftyMoveRule() {
 		return false
 	}
 	return true
