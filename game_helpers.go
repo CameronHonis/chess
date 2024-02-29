@@ -653,6 +653,8 @@ func UpdateBoardEnPassantSquare(lastBoard *Board, boardBuilder *BoardBuilder, mo
 			move.StartSquare.File,
 		}
 		boardBuilder.WithEnPassantSquare(enPassantSquare)
+	} else {
+		boardBuilder.WithEnPassantSquare(nil)
 	}
 }
 func UpdateCastleRights(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {

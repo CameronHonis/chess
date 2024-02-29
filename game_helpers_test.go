@@ -46,7 +46,7 @@ var _ = Describe("GameHelpers", func() {
 			})
 		})
 		When("a single pawn is checking the king", func() {
-			FIt("returns the square of the pawn", func() {
+			It("returns the square of the pawn", func() {
 				board, err := BoardFromFEN("8/8/4k3/3P4/8/8/8/7K b - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				checkingSquares := GetCheckingSquares(board, false)
@@ -178,7 +178,7 @@ var _ = Describe("GameHelpers", func() {
 					compareMoves(&expMoves, realMoves)
 				})
 				When("a pawn capture results in a check", func() {
-					FIt("returns only the capturing move", func() {
+					It("returns only the capturing move", func() {
 						board, err := BoardFromFEN("3qkbnr/Bp1npb1p/2Pp1p2/p4Pp1/4P3/2N5/PPP3PP/R2QKBNR w KQk g6 1 10")
 						Expect(err).ToNot(HaveOccurred())
 						realMoves, err := GetLegalMovesForPawn(board, &Square{6, 3})
@@ -1458,6 +1458,17 @@ var _ = Describe("GameHelpers", func() {
 				It("results in a terminal board", func() {
 					board = GetBoardFromMove(board, &move)
 					Expect(board.Result).To(Equal(BOARD_RESULT_BLACK_WINS_BY_CHECKMATE))
+				})
+			})
+			When("the previous move was a double pawn move", func() {
+				BeforeEach(func() {
+					board, _ = BoardFromFEN("rnbqkbnr/ppppp2p/5p2/6p1/3PP3/8/PPP2PPP/RNBQKBNR w KQkq g6 1 3")
+				})
+				It("resets the en passant square", func() {
+					move = Move{WHITE_QUEEN, &Square{1, 4}, &Square{5, 8}, EMPTY, []*Square{{5, 8}}, EMPTY}
+					board = GetBoardFromMove(board, &move)
+					Expect(board.Result).To(Equal(BOARD_RESULT_WHITE_WINS_BY_CHECKMATE))
+					Expect(board.OptEnPassantSquare).To(BeNil())
 				})
 			})
 		})
