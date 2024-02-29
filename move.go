@@ -1,9 +1,5 @@
 package chess
 
-import (
-	"math"
-)
-
 type Move struct {
 	Piece               Piece     `json:"piece"`
 	StartSquare         *Square   `json:"startSquare"`
@@ -40,8 +36,8 @@ func (move *Move) DoesAllowEnPassant() bool {
 	if !move.Piece.IsPawn() {
 		return false
 	}
-	dis := math.Abs(float64(int(move.EndSquare.Rank) - int(move.StartSquare.Rank)))
-	return dis > 1
+	dis := int(move.StartSquare.Rank) - int(move.EndSquare.Rank)
+	return dis == 2 || dis == -2
 }
 
 func (move *Move) IsCastles() bool {

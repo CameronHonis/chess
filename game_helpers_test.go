@@ -1472,6 +1472,19 @@ var _ = Describe("GameHelpers", func() {
 				})
 			})
 		})
+		When("the last move was a pawn double jump", func() {
+			Context("and this move is a pawn single jump", func() {
+				BeforeEach(func() {
+					board, _ = BoardFromFEN("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1")
+					Expect(board.OptEnPassantSquare).ToNot(BeNil())
+					move = Move{BLACK_PAWN, &Square{7, 5}, &Square{6, 5}, EMPTY, make([]*Square, 0), EMPTY}
+				})
+				FIt("resets the en passant square", func() {
+					newBoard := GetBoardFromMove(board, &move)
+					Expect(newBoard.OptEnPassantSquare).To(BeNil())
+				})
+			})
+		})
 	})
 	Describe("#UpdatePiecesFromMove", func() {
 		var board *Board
