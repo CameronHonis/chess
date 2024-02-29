@@ -17,7 +17,7 @@ func compareSquares(expSquares *[]Square, realSquares *[]*Square) {
 				break
 			}
 		}
-		Expect(foundMatch).To(Equal(true), "unexpected square %+v", realSquare)
+		Expect(foundMatch).To(BeTrue(), "unexpected square %+v", realSquare)
 	}
 }
 
@@ -42,6 +42,15 @@ var _ = Describe("GameHelpers", func() {
 				board := GetInitBoard()
 				checkingSquares := GetCheckingSquares(board, board.IsWhiteTurn)
 				expSquares := make([]Square, 0)
+				compareSquares(&expSquares, checkingSquares)
+			})
+		})
+		When("a single pawn is checking the king", func() {
+			FIt("returns the square of the pawn", func() {
+				board, err := BoardFromFEN("8/8/4k3/3P4/8/8/8/7K b - - 0 1")
+				Expect(err).ToNot(HaveOccurred())
+				checkingSquares := GetCheckingSquares(board, false)
+				expSquares := []Square{{5, 4}}
 				compareSquares(&expSquares, checkingSquares)
 			})
 		})
@@ -167,6 +176,20 @@ var _ = Describe("GameHelpers", func() {
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 7}, BLACK_KNIGHT, make([]*Square, 0), EMPTY},
 					}
 					compareMoves(&expMoves, realMoves)
+				})
+				When("a pawn capture results in a check", func() {
+					FIt("returns only the capturing move", func() {
+						board, err := BoardFromFEN("3qkbnr/Bp1npb1p/2Pp1p2/p4Pp1/4P3/2N5/PPP3PP/R2QKBNR w KQk g6 1 10")
+						Expect(err).ToNot(HaveOccurred())
+						realMoves, err := GetLegalMovesForPawn(board, &Square{6, 3})
+						Expect(err).ToNot(HaveOccurred())
+						expMoves := []Move{
+							{WHITE_PAWN, &Square{6, 3}, &Square{7, 4}, BLACK_KNIGHT, []*Square{{7, 4}}, EMPTY},
+							{WHITE_PAWN, &Square{6, 3}, &Square{7, 3}, EMPTY, []*Square{}, EMPTY},
+							{WHITE_PAWN, &Square{6, 3}, &Square{7, 2}, BLACK_PAWN, []*Square{}, EMPTY},
+						}
+						compareMoves(&expMoves, realMoves)
+					})
 				})
 			})
 			Context("and the pawn is blocked", func() {

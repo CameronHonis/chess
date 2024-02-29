@@ -29,14 +29,14 @@ func GetCheckingSquares(board *Board, isWhiteKing bool) *[]*Square {
 			checkingSquares = append(checkingSquares, knightCheckSquare)
 		}
 	}
-	var pawnCheckSquares []Square
+	var pawnCheckSquares []*Square
 	if isWhiteKing {
-		pawnCheckSquares = []Square{
+		pawnCheckSquares = []*Square{
 			{kingSquare.Rank + 1, kingSquare.File - 1},
 			{kingSquare.Rank + 1, kingSquare.File + 1},
 		}
 	} else {
-		pawnCheckSquares = []Square{
+		pawnCheckSquares = []*Square{
 			{kingSquare.Rank - 1, kingSquare.File - 1},
 			{kingSquare.Rank - 1, kingSquare.File + 1},
 		}
@@ -45,11 +45,11 @@ func GetCheckingSquares(board *Board, isWhiteKing bool) *[]*Square {
 		if !pawnCheckSquare.IsValidBoardSquare() {
 			continue
 		}
-		piece := board.GetPieceOnSquare(&pawnCheckSquare)
+		piece := board.GetPieceOnSquare(pawnCheckSquare)
 		if isWhiteKing && piece == BLACK_PAWN {
-			checkingSquares = append(checkingSquares, &pawnCheckSquare)
+			checkingSquares = append(checkingSquares, pawnCheckSquare)
 		} else if !isWhiteKing && piece == WHITE_PAWN {
-			checkingSquares = append(checkingSquares, &pawnCheckSquare)
+			checkingSquares = append(checkingSquares, pawnCheckSquare)
 		}
 	}
 	for _, diagDir := range [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}} {
