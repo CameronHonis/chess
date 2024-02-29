@@ -2,7 +2,6 @@ package chess
 
 import (
 	"math"
-	"sort"
 )
 
 type Move struct {
@@ -14,22 +13,19 @@ type Move struct {
 	PawnUpgradedTo      Piece     `json:"pawnUpgradedTo"`
 }
 
-func (move *Move) SortKingCheckingSquares() {
-	sort.Slice(move.KingCheckingSquares, func(i, j int) bool {
-		squareA := move.KingCheckingSquares[i]
-		squareB := move.KingCheckingSquares[j]
-		return squareA.Rank*8+squareA.File < squareB.Rank*8+squareB.File
-	})
-}
-
 func (move *Move) EqualTo(otherMove *Move) bool {
 	if len(move.KingCheckingSquares) != len(otherMove.KingCheckingSquares) {
 		return false
 	}
-	move.SortKingCheckingSquares()
-	for squareIdx, square := range move.KingCheckingSquares {
-		otherSquare := otherMove.KingCheckingSquares[squareIdx]
-		if !square.EqualTo(otherSquare) {
+	for _, checkingSquare := range move.KingCheckingSquares {
+		foundMatch := false
+		for _, otherCheckingSquare := range otherMove.KingCheckingSquares {
+			if checkingSquare.EqualTo(otherCheckingSquare) {
+				foundMatch = true
+				break
+			}
+		}
+		if !foundMatch {
 			return false
 		}
 	}
