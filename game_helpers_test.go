@@ -1479,7 +1479,7 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.OptEnPassantSquare).ToNot(BeNil())
 					move = Move{BLACK_PAWN, &Square{7, 5}, &Square{6, 5}, EMPTY, make([]*Square, 0), EMPTY}
 				})
-				FIt("resets the en passant square", func() {
+				It("resets the en passant square", func() {
 					newBoard := GetBoardFromMove(board, &move)
 					Expect(newBoard.OptEnPassantSquare).To(BeNil())
 				})

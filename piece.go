@@ -1,5 +1,7 @@
 package chess
 
+import "fmt"
+
 type Piece uint8
 
 const (
@@ -52,4 +54,24 @@ func (p Piece) IsQueen() bool {
 
 func (p Piece) IsKing() bool {
 	return p == WHITE_KING || p == BLACK_KING
+}
+
+func (p Piece) ToAlgebraic() string {
+	switch p {
+	case WHITE_PAWN, BLACK_PAWN:
+		return "P"
+	case WHITE_KNIGHT, BLACK_KNIGHT:
+		return "N"
+	case WHITE_BISHOP, BLACK_BISHOP:
+		return "B"
+	case WHITE_ROOK, BLACK_ROOK:
+		return "R"
+	case WHITE_QUEEN, BLACK_QUEEN:
+		return "Q"
+	case WHITE_KING, BLACK_KING:
+		return "K"
+	default:
+		panic(fmt.Sprintf("cannot convert invalid piece %s to algebraic notation", p))
+	}
+	return ""
 }
