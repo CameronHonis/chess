@@ -39,6 +39,10 @@ func (s *Square) Copy() *Square {
 	return &Square{s.Rank, s.File}
 }
 
+func (s *Square) String() string {
+	return fmt.Sprintf("Square<%s>", s.ToAlgebraicCoords())
+}
+
 func SquareFromAlgebraicCoords(algCoords string) (*Square, error) {
 	runeCoords := []rune(strings.ToLower(algCoords))
 	if len(runeCoords) != 2 {

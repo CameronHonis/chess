@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-func GetCheckingSquares(board *Board, isWhiteKing bool) *[]*Square {
+func GetCheckingSquares(board *Board, isWhiteKing bool) []*Square {
 	checkingSquares := make([]*Square, 0)
 	kingSquare := board.GetKingSquare(isWhiteKing)
 	knightCheckSquares := []*Square{
@@ -99,21 +99,21 @@ func GetCheckingSquares(board *Board, isWhiteKing bool) *[]*Square {
 			}
 		}
 	}
-	return &checkingSquares
+	return checkingSquares
 }
 
-func filterMovesByKingSafety(board *Board, moves *[]*Move) *[]*Move {
-	filteredMoves := make([]*Move, 0, len(*moves))
-	for _, move := range *moves {
+func filterMovesByKingSafety(board *Board, moves []*Move) []*Move {
+	filteredMoves := make([]*Move, 0, len(moves))
+	for _, move := range moves {
 		boardBuilder := NewBoardBuilder().FromBoard(board)
 		UpdatePiecesFromMove(board, boardBuilder, move)
 		newBoard := boardBuilder.Build()
 		checkingSquares := GetCheckingSquares(newBoard, board.IsWhiteTurn)
-		if len(*checkingSquares) == 0 {
+		if len(checkingSquares) == 0 {
 			filteredMoves = append(filteredMoves, move)
 		}
 	}
-	return &filteredMoves
+	return filteredMoves
 }
 
 func addKingChecksToMoves(board *Board, moves *[]*Move) {
@@ -121,13 +121,13 @@ func addKingChecksToMoves(board *Board, moves *[]*Move) {
 		boardBuilder := NewBoardBuilder().FromBoard(board)
 		UpdatePiecesFromMove(board, boardBuilder, move)
 		newBoard := boardBuilder.Build()
-		move.KingCheckingSquares = *GetCheckingSquares(newBoard, !board.IsWhiteTurn)
+		move.KingCheckingSquares = GetCheckingSquares(newBoard, !board.IsWhiteTurn)
 	}
 }
-func GetLegalMovesForPawn(board *Board, square *Square) (*[]*Move, error) {
+func GetLegalMovesForPawn(board *Board, square *Square) ([]*Move, error) {
 	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
-		return &emptyMoves, nil
+		return emptyMoves, nil
 	}
 	pawnMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
@@ -218,15 +218,15 @@ func GetLegalMovesForPawn(board *Board, square *Square) (*[]*Move, error) {
 			}
 		}
 	}
-	pawnMoves = *filterMovesByKingSafety(board, &pawnMoves)
+	pawnMoves = filterMovesByKingSafety(board, pawnMoves)
 	addKingChecksToMoves(board, &pawnMoves)
-	return &pawnMoves, nil
+	return pawnMoves, nil
 }
 
-func GetLegalMovesForKnight(board *Board, square *Square) (*[]*Move, error) {
+func GetLegalMovesForKnight(board *Board, square *Square) ([]*Move, error) {
 	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
-		return &emptyMoves, nil
+		return emptyMoves, nil
 	}
 	knightMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
@@ -258,15 +258,15 @@ func GetLegalMovesForKnight(board *Board, square *Square) (*[]*Move, error) {
 			knightMoves = append(knightMoves, &move)
 		}
 	}
-	knightMoves = *filterMovesByKingSafety(board, &knightMoves)
+	knightMoves = filterMovesByKingSafety(board, knightMoves)
 	addKingChecksToMoves(board, &knightMoves)
-	return &knightMoves, nil
+	return knightMoves, nil
 }
 
-func GetLegalMovesForBishop(board *Board, square *Square) (*[]*Move, error) {
+func GetLegalMovesForBishop(board *Board, square *Square) ([]*Move, error) {
 	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
-		return &emptyMoves, nil
+		return emptyMoves, nil
 	}
 	bishopMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
@@ -296,15 +296,15 @@ func GetLegalMovesForBishop(board *Board, square *Square) (*[]*Move, error) {
 			}
 		}
 	}
-	bishopMoves = *filterMovesByKingSafety(board, &bishopMoves)
+	bishopMoves = filterMovesByKingSafety(board, bishopMoves)
 	addKingChecksToMoves(board, &bishopMoves)
-	return &bishopMoves, nil
+	return bishopMoves, nil
 }
 
-func GetLegalMovesForRook(board *Board, square *Square) (*[]*Move, error) {
+func GetLegalMovesForRook(board *Board, square *Square) ([]*Move, error) {
 	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
-		return &emptyMoves, nil
+		return emptyMoves, nil
 	}
 	rookMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
@@ -334,15 +334,15 @@ func GetLegalMovesForRook(board *Board, square *Square) (*[]*Move, error) {
 			}
 		}
 	}
-	rookMoves = *filterMovesByKingSafety(board, &rookMoves)
+	rookMoves = filterMovesByKingSafety(board, rookMoves)
 	addKingChecksToMoves(board, &rookMoves)
-	return &rookMoves, nil
+	return rookMoves, nil
 }
 
-func GetLegalMovesForQueen(board *Board, square *Square) (*[]*Move, error) {
+func GetLegalMovesForQueen(board *Board, square *Square) ([]*Move, error) {
 	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
-		return &emptyMoves, nil
+		return emptyMoves, nil
 	}
 	queenMoves := make([]*Move, 0)
 	piece := board.GetPieceOnSquare(square)
@@ -372,15 +372,15 @@ func GetLegalMovesForQueen(board *Board, square *Square) (*[]*Move, error) {
 			}
 		}
 	}
-	queenMoves = *filterMovesByKingSafety(board, &queenMoves)
+	queenMoves = filterMovesByKingSafety(board, queenMoves)
 	addKingChecksToMoves(board, &queenMoves)
-	return &queenMoves, nil
+	return queenMoves, nil
 }
 
-func GetLegalMovesForKing(board *Board) *[]*Move {
+func GetLegalMovesForKing(board *Board) []*Move {
 	if board.Result != BOARD_RESULT_IN_PROGRESS {
 		emptyMoves := make([]*Move, 0)
-		return &emptyMoves
+		return emptyMoves
 	}
 	kingMoves := make([]*Move, 0)
 	whiteKingSquare, blackKingSquare := board.ComputeKingPositions()
@@ -427,8 +427,8 @@ func GetLegalMovesForKing(board *Board) *[]*Move {
 		kingDestSquare := Square{square.Rank, square.File - 2}
 		kingMoves = append(kingMoves, &Move{piece, square, &kingDestSquare, EMPTY, make([]*Square, 0), EMPTY})
 	}
-	kingMoves = *filterMovesByKingSafety(board, &kingMoves)
-	return &kingMoves
+	kingMoves = filterMovesByKingSafety(board, kingMoves)
+	return kingMoves
 }
 
 func IsLegalMove(board *Board, move *Move) bool {
@@ -443,7 +443,7 @@ func IsLegalMove(board *Board, move *Move) bool {
 		return false
 	}
 
-	var legalMoves *[]*Move
+	var legalMoves []*Move
 	var err error
 	if piece.IsPawn() {
 		legalMoves, err = GetLegalMovesForPawn(board, move.StartSquare)
@@ -461,7 +461,7 @@ func IsLegalMove(board *Board, move *Move) bool {
 	if err != nil {
 		return false
 	}
-	for _, legalMove := range *legalMoves {
+	for _, legalMove := range legalMoves {
 		if legalMove.EqualTo(move) {
 			return true
 		}
@@ -469,7 +469,44 @@ func IsLegalMove(board *Board, move *Move) bool {
 	return false
 }
 
-func GetLegalMoves(board *Board, stopAtFirst bool) (*[8][8][]*Move, uint8) {
+func GetLegalMovesFromOrigin(board *Board, square *Square) ([]*Move, error) {
+	piece := board.GetPieceOnSquare(square)
+	if piece == EMPTY {
+		return make([]*Move, 0), nil
+	}
+	if board.IsWhiteTurn != piece.IsWhite() {
+		return nil, fmt.Errorf("cannot generate moves, not player's turn")
+	}
+	if piece.IsPawn() {
+		return GetLegalMovesForPawn(board, square)
+	} else if piece.IsKnight() {
+		return GetLegalMovesForKnight(board, square)
+	} else if piece.IsBishop() {
+		return GetLegalMovesForBishop(board, square)
+	} else if piece.IsRook() {
+		return GetLegalMovesForRook(board, square)
+	} else if piece.IsQueen() {
+		return GetLegalMovesForQueen(board, square)
+	} else if piece.IsKing() {
+		return GetLegalMovesForKing(board), nil
+	}
+	return nil, fmt.Errorf("unexpected piece %s while generating move", piece)
+}
+
+func HasLegalMove(board *Board) bool {
+	for rank := uint8(1); rank < 9; rank++ {
+		for file := uint8(1); file < 9; file++ {
+			square := Square{rank, file}
+			squareMoves, _ := GetLegalMovesFromOrigin(board, &square)
+			if squareMoves != nil && len(squareMoves) > 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func GetLegalMovesBySquare(board *Board, stopAtFirst bool) (*[8][8][]*Move, uint8, error) {
 	//for the active player, it returns:
 	//	1. A 2d array which maps to board squares, where the element type
 	//	   is a slice of legal moves for that piece in that square
@@ -477,39 +514,42 @@ func GetLegalMoves(board *Board, stopAtFirst bool) (*[8][8][]*Move, uint8) {
 	var boardMoves [8][8][]*Move
 	movesCount := uint8(0)
 	if board.Result != BOARD_RESULT_IN_PROGRESS {
-		return &boardMoves, movesCount
+		return nil, 0, fmt.Errorf("cannot generate moves by square on terminal board")
 	}
 	for rank := uint8(1); rank < 9; rank++ {
 		for file := uint8(1); file < 9; file++ {
 			square := Square{rank, file}
-			piece := board.GetPieceOnSquare(&square)
-			if piece == EMPTY {
-				continue
+			movesBySquare, movesErr := GetLegalMovesFromOrigin(board, &square)
+			if movesErr != nil {
+				return nil, 0, fmt.Errorf("cannot generates moves by square: %s", movesErr)
 			}
-			if piece.IsWhite() == board.IsWhiteTurn {
-				var moves *[]*Move
-				if piece.IsPawn() {
-					moves, _ = GetLegalMovesForPawn(board, &square)
-				} else if piece.IsKnight() {
-					moves, _ = GetLegalMovesForKnight(board, &square)
-				} else if piece.IsBishop() {
-					moves, _ = GetLegalMovesForBishop(board, &square)
-				} else if piece.IsRook() {
-					moves, _ = GetLegalMovesForRook(board, &square)
-				} else if piece.IsQueen() {
-					moves, _ = GetLegalMovesForQueen(board, &square)
-				} else {
-					moves = GetLegalMovesForKing(board)
-				}
-				boardMoves[rank-1][file-1] = *moves
-				movesCount += uint8(len(*moves))
-				if stopAtFirst && len(*moves) > 0 {
-					return &boardMoves, movesCount
-				}
+			boardMoves[rank-1][file-1] = movesBySquare
+			movesCount += uint8(len(movesBySquare))
+
+			if stopAtFirst && movesCount > 0 {
+				return &boardMoves, movesCount, nil
 			}
 		}
 	}
-	return &boardMoves, movesCount
+	return &boardMoves, movesCount, nil
+}
+
+func GetLegalMoves(board *Board) ([]*Move, error) {
+	var moves = make([]*Move, 0)
+	if board.Result != BOARD_RESULT_IN_PROGRESS {
+		return moves, fmt.Errorf("cannot generate moves on terminal board")
+	}
+	for rank := uint8(1); rank < 9; rank++ {
+		for file := uint8(1); file < 9; file++ {
+			square := &Square{rank, file}
+			squareMoves, movesErr := GetLegalMovesFromOrigin(board, square)
+			if movesErr != nil {
+				return make([]*Move, 0), fmt.Errorf("cannot generate moves on square %s on board %s: %s", square, board, movesErr)
+			}
+			moves = append(moves, squareMoves...)
+		}
+	}
+	return moves, nil
 }
 
 // TODO: do we need square param here?
@@ -519,7 +559,7 @@ func canCastleKingside(board *Board, square *Square) bool {
 	} else if !board.IsWhiteTurn && !board.CanBlackCastleKingside {
 		return false
 	}
-	if len(*GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
+	if len(GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	piece := board.GetPieceOnSquare(square)
@@ -535,12 +575,12 @@ func canCastleKingside(board *Board, square *Square) bool {
 	boardBuilder := NewBoardBuilder().FromBoard(board)
 	boardBuilder.WithPiece(EMPTY, square)
 	boardBuilder.WithPiece(piece, &kingRightSquare)
-	if len(*GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
+	if len(GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	boardBuilder.WithPiece(EMPTY, &kingRightSquare)
 	boardBuilder.WithPiece(piece, &kingRightTwoSquare)
-	if len(*GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
+	if len(GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	return true
@@ -553,7 +593,7 @@ func canCastleQueenside(board *Board, square *Square) bool {
 	} else if !board.IsWhiteTurn && !board.CanBlackCastleQueenside {
 		return false
 	}
-	if len(*GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
+	if len(GetCheckingSquares(board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	piece := board.GetPieceOnSquare(square)
@@ -569,12 +609,12 @@ func canCastleQueenside(board *Board, square *Square) bool {
 	boardBuilder := NewBoardBuilder().FromBoard(board)
 	boardBuilder.WithPiece(EMPTY, square)
 	boardBuilder.WithPiece(piece, &kingLeftSquare)
-	if len(*GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
+	if len(GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	boardBuilder.WithPiece(EMPTY, &kingLeftSquare)
 	boardBuilder.WithPiece(piece, &kingLeftTwoSquare)
-	if len(*GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
+	if len(GetCheckingSquares(boardBuilder.board, board.IsWhiteTurn)) > 0 {
 		return false
 	}
 	return true
@@ -705,7 +745,7 @@ func UpdateBoardResult(lastBoard *Board, boardBuilder *BoardBuilder, repetitions
 		boardBuilder.WithResult(BOARD_RESULT_DRAW_BY_FIFTY_MOVE_RULE)
 	} else if !boardBuilder.board.HasLegalNextMove() {
 		checkingSquares := GetCheckingSquares(boardBuilder.board, boardBuilder.board.IsWhiteTurn)
-		if len(*checkingSquares) > 0 {
+		if len(checkingSquares) > 0 {
 			if lastBoard.IsWhiteTurn {
 				boardBuilder.WithResult(BOARD_RESULT_WHITE_WINS_BY_CHECKMATE)
 			} else {

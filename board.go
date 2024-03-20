@@ -238,14 +238,13 @@ func (board *Board) IsForcedDrawByMaterial() bool {
 
 func (board *Board) HasLegalNextMove() bool {
 	moves := GetLegalMovesForKing(board)
-	if len(*moves) == 0 {
+	if len(moves) == 0 {
 		checkingSquares := GetCheckingSquares(board, board.IsWhiteTurn)
-		if len(*checkingSquares) > 1 {
-			// assume that it must be checkmate if the king is in check and can't move anywhere
+		if len(checkingSquares) > 1 {
+			// assume that it must be checkmate if the king is in double check and can't move anywhere
 			return false
 		} else {
-			_, legalMovesCount := GetLegalMoves(board, true)
-			return legalMovesCount > 0
+			return HasLegalMove(board)
 		}
 	} else {
 		return true
@@ -382,4 +381,8 @@ func (board *Board) ToMiniFEN() string {
 
 func (board *Board) IsInitBoard() bool {
 	return board.ToMiniFEN() == "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -" && board.FullMoveCount == uint16(1)
+}
+
+func (board *Board) String() string {
+	return fmt.Sprintf("Board<%s>", board.ToFEN())
 }

@@ -7,11 +7,11 @@ import (
 	. "github.com/CameronHonis/chess"
 )
 
-func compareSquares(expSquares *[]Square, realSquares *[]*Square) {
-	Expect(*realSquares).To(HaveLen(len(*expSquares)))
-	for _, realSquare := range *realSquares {
+func compareSquares(expSquares []Square, realSquares []*Square) {
+	Expect(realSquares).To(HaveLen(len(expSquares)))
+	for _, realSquare := range realSquares {
 		foundMatch := false
-		for _, expSquare := range *expSquares {
+		for _, expSquare := range expSquares {
 			if realSquare.Rank == expSquare.Rank && realSquare.File == expSquare.File {
 				foundMatch = true
 				break
@@ -21,11 +21,11 @@ func compareSquares(expSquares *[]Square, realSquares *[]*Square) {
 	}
 }
 
-func compareMoves(expMoves *[]Move, realMoves *[]*Move) {
-	Expect(*realMoves).To(HaveLen(len(*expMoves)))
-	for _, realMove := range *realMoves {
+func compareMoves(expMoves []Move, realMoves []*Move) {
+	Expect(realMoves).To(HaveLen(len(expMoves)))
+	for _, realMove := range realMoves {
 		foundMatch := false
-		for _, expMove := range *expMoves {
+		for _, expMove := range expMoves {
 			if expMove.EqualTo(realMove) {
 				foundMatch = true
 				break
@@ -42,7 +42,7 @@ var _ = Describe("GameHelpers", func() {
 				board := GetInitBoard()
 				checkingSquares := GetCheckingSquares(board, board.IsWhiteTurn)
 				expSquares := make([]Square, 0)
-				compareSquares(&expSquares, checkingSquares)
+				compareSquares(expSquares, checkingSquares)
 			})
 		})
 		When("a single pawn is checking the king", func() {
@@ -51,7 +51,7 @@ var _ = Describe("GameHelpers", func() {
 				Expect(err).ToNot(HaveOccurred())
 				checkingSquares := GetCheckingSquares(board, false)
 				expSquares := []Square{{5, 4}}
-				compareSquares(&expSquares, checkingSquares)
+				compareSquares(expSquares, checkingSquares)
 			})
 		})
 		When("there are multiple rooks on the board", func() {
@@ -65,7 +65,7 @@ var _ = Describe("GameHelpers", func() {
 					{5, 3},
 					{5, 7},
 				}
-				compareSquares(&expSquares, rookSquares)
+				compareSquares(expSquares, rookSquares)
 
 			})
 		})
@@ -80,7 +80,7 @@ var _ = Describe("GameHelpers", func() {
 					{8, 4},
 					{4, 8},
 				}
-				compareSquares(&expSquares, bishopSquares)
+				compareSquares(expSquares, bishopSquares)
 			})
 		})
 		When("there are multiple pawns on the board", func() {
@@ -93,7 +93,7 @@ var _ = Describe("GameHelpers", func() {
 						{5, 5},
 						{5, 7},
 					}
-					compareSquares(&expSquares, pawnSquares)
+					compareSquares(expSquares, pawnSquares)
 				})
 			})
 			Context("when the pawns are black", func() {
@@ -105,7 +105,7 @@ var _ = Describe("GameHelpers", func() {
 						{7, 5},
 						{7, 7},
 					}
-					compareSquares(&expSquares, pawnSquares)
+					compareSquares(expSquares, pawnSquares)
 				})
 			})
 		})
@@ -124,7 +124,7 @@ var _ = Describe("GameHelpers", func() {
 					{8, 5},
 					{8, 7},
 				}
-				compareSquares(&expSquares, knightSquares)
+				compareSquares(expSquares, knightSquares)
 			})
 		})
 		When("there are multiple queens on the board", func() {
@@ -142,7 +142,7 @@ var _ = Describe("GameHelpers", func() {
 					{5, 7},
 					{5, 6},
 				}
-				compareSquares(&expSquares, queenSquares)
+				compareSquares(expSquares, queenSquares)
 			})
 		})
 		When("only same color pieces as king exist", func() {
@@ -150,7 +150,7 @@ var _ = Describe("GameHelpers", func() {
 				board, err := BoardFromFEN("3q4/4p3/2q2k2/4p3/3bn1n1/5r2/1K6/8 w - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				checkingSquares := GetCheckingSquares(board, false)
-				Expect(*checkingSquares).To(HaveLen(0))
+				Expect(checkingSquares).To(HaveLen(0))
 			})
 		})
 		When("all 'blockable' pieces are blocked", func() {
@@ -158,7 +158,7 @@ var _ = Describe("GameHelpers", func() {
 				board, err := BoardFromFEN("3Q4/4n3/1Qq2kpR/6N1/7B/2N2N2/1B3R2/3K4 w - - 0 1")
 				Expect(err).ToNot(HaveOccurred())
 				checkingSquares := GetCheckingSquares(board, false)
-				Expect(*checkingSquares).To(HaveLen(0))
+				Expect(checkingSquares).To(HaveLen(0))
 			})
 		})
 	})
@@ -175,7 +175,7 @@ var _ = Describe("GameHelpers", func() {
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 5}, BLACK_PAWN, make([]*Square, 0), EMPTY},
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 7}, BLACK_KNIGHT, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 				When("a pawn capture results in a check", func() {
 					It("returns only the capturing move", func() {
@@ -188,7 +188,7 @@ var _ = Describe("GameHelpers", func() {
 							{WHITE_PAWN, &Square{6, 3}, &Square{7, 3}, EMPTY, []*Square{}, EMPTY},
 							{WHITE_PAWN, &Square{6, 3}, &Square{7, 2}, BLACK_PAWN, []*Square{}, EMPTY},
 						}
-						compareMoves(&expMoves, realMoves)
+						compareMoves(expMoves, realMoves)
 					})
 				})
 			})
@@ -202,7 +202,7 @@ var _ = Describe("GameHelpers", func() {
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 5}, BLACK_PAWN, make([]*Square, 0), EMPTY},
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 7}, BLACK_KNIGHT, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 		})
@@ -217,7 +217,7 @@ var _ = Describe("GameHelpers", func() {
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 6}, EMPTY, make([]*Square, 0), EMPTY},
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 5}, BLACK_PAWN, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 			Context("and the pawn is blocked", func() {
@@ -229,7 +229,7 @@ var _ = Describe("GameHelpers", func() {
 					expMoves := []Move{
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 5}, BLACK_ROOK, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 		})
@@ -243,7 +243,7 @@ var _ = Describe("GameHelpers", func() {
 					expMoves := []Move{
 						{WHITE_PAWN, &Square{4, 6}, &Square{5, 6}, EMPTY, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 			Context("and the pawn is blocked", func() {
@@ -252,7 +252,7 @@ var _ = Describe("GameHelpers", func() {
 					Expect(err).ToNot(HaveOccurred())
 					realMoves, err := GetLegalMovesForPawn(board, &Square{4, 6})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(*realMoves).To(HaveLen(0))
+					Expect(realMoves).To(HaveLen(0))
 				})
 			})
 			Context("and the 'attacked' squares are occupied by friendly pieces", func() {
@@ -264,7 +264,7 @@ var _ = Describe("GameHelpers", func() {
 					expMoves := []Move{
 						{WHITE_PAWN, &Square{3, 5}, &Square{4, 5}, EMPTY, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 		})
@@ -278,7 +278,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_PAWN, &Square{5, 6}, &Square{6, 5}, BLACK_PAWN, make([]*Square, 0), EMPTY},
 					{WHITE_PAWN, &Square{5, 6}, &Square{6, 6}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the pawn can capture en passant to the right", func() {
@@ -291,7 +291,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_PAWN, &Square{5, 6}, &Square{6, 7}, BLACK_PAWN, make([]*Square, 0), EMPTY},
 					{WHITE_PAWN, &Square{5, 6}, &Square{6, 6}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the pawn is on the starting row", func() {
@@ -305,7 +305,7 @@ var _ = Describe("GameHelpers", func() {
 						{WHITE_PAWN, &Square{2, 2}, &Square{3, 2}, EMPTY, make([]*Square, 0), EMPTY},
 						{WHITE_PAWN, &Square{2, 2}, &Square{4, 2}, EMPTY, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 			Context("and the double jump square is blocked", func() {
@@ -317,7 +317,7 @@ var _ = Describe("GameHelpers", func() {
 					expMoves := []Move{
 						{WHITE_PAWN, &Square{2, 2}, &Square{3, 2}, EMPTY, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 			Context("and the square directly in front is occupied", func() {
@@ -326,7 +326,7 @@ var _ = Describe("GameHelpers", func() {
 					Expect(err).ToNot(HaveOccurred())
 					realMoves, err := GetLegalMovesForPawn(board, &Square{2, 2})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(*realMoves).To(HaveLen(0))
+					Expect(realMoves).To(HaveLen(0))
 				})
 			})
 		})
@@ -348,7 +348,7 @@ var _ = Describe("GameHelpers", func() {
 							{WHITE_PAWN, &Square{7, 2}, &Square{8, 1}, BLACK_ROOK, make([]*Square, 0), WHITE_ROOK},
 							{WHITE_PAWN, &Square{7, 2}, &Square{8, 1}, BLACK_ROOK, make([]*Square, 0), WHITE_QUEEN},
 						}
-						compareMoves(&expMoves, realMoves)
+						compareMoves(expMoves, realMoves)
 					})
 				})
 				Context("and the square in front is occupied", func() {
@@ -363,7 +363,7 @@ var _ = Describe("GameHelpers", func() {
 							{WHITE_PAWN, &Square{7, 2}, &Square{8, 1}, BLACK_ROOK, []*Square{{8, 1}}, WHITE_ROOK},
 							{WHITE_PAWN, &Square{7, 2}, &Square{8, 1}, BLACK_ROOK, []*Square{{8, 1}}, WHITE_QUEEN},
 						}
-						compareMoves(&expMoves, realMoves)
+						compareMoves(expMoves, realMoves)
 					})
 				})
 			})
@@ -379,7 +379,7 @@ var _ = Describe("GameHelpers", func() {
 						{WHITE_PAWN, &Square{7, 2}, &Square{8, 2}, EMPTY, make([]*Square, 0), WHITE_ROOK},
 						{WHITE_PAWN, &Square{7, 2}, &Square{8, 2}, EMPTY, make([]*Square, 0), WHITE_QUEEN},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 		})
@@ -393,7 +393,7 @@ var _ = Describe("GameHelpers", func() {
 					expMoves := []Move{
 						{WHITE_PAWN, &Square{3, 5}, &Square{4, 5}, EMPTY, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 			Context("and the pin is coming from a piece on the same diagonal", func() {
@@ -402,7 +402,7 @@ var _ = Describe("GameHelpers", func() {
 					Expect(err).ToNot(HaveOccurred())
 					realMoves, err := GetLegalMovesForPawn(board, &Square{3, 5})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(*realMoves).To(HaveLen(0))
+					Expect(realMoves).To(HaveLen(0))
 				})
 			})
 			Context("and the pin is coming from the same rank", func() {
@@ -411,7 +411,7 @@ var _ = Describe("GameHelpers", func() {
 					Expect(err).ToNot(HaveOccurred())
 					realMoves, err := GetLegalMovesForPawn(board, &Square{3, 5})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(*realMoves).To(HaveLen(0))
+					Expect(realMoves).To(HaveLen(0))
 				})
 			})
 		})
@@ -424,7 +424,7 @@ var _ = Describe("GameHelpers", func() {
 				expMoves := []Move{
 					{WHITE_PAWN, &Square{3, 5}, &Square{4, 5}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 			Context("and the pawn can capture", func() {
 				It("only returns the non-capturing move that blocks the check", func() {
@@ -435,7 +435,7 @@ var _ = Describe("GameHelpers", func() {
 					expMoves := []Move{
 						{WHITE_PAWN, &Square{3, 5}, &Square{4, 5}, EMPTY, make([]*Square, 0), EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 			Context("and the friendly king is under double check", func() {
@@ -444,7 +444,7 @@ var _ = Describe("GameHelpers", func() {
 					Expect(err).ToNot(HaveOccurred())
 					realMoves, err := GetLegalMovesForPawn(board, &Square{3, 5})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(*realMoves).To(HaveLen(0))
+					Expect(realMoves).To(HaveLen(0))
 				})
 			})
 		})
@@ -453,7 +453,7 @@ var _ = Describe("GameHelpers", func() {
 				board, _ := BoardFromFEN("k6p/8/8/8/8/8/8/RQ4K1 b - - 0 1")
 				realMoves, err := GetLegalMovesForPawn(board, &Square{8, 8})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(*realMoves).To(HaveLen(0))
+				Expect(realMoves).To(HaveLen(0))
 			})
 		})
 	})
@@ -467,7 +467,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_KNIGHT, &Square{1, 8}, &Square{2, 6}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_KNIGHT, &Square{1, 8}, &Square{3, 7}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the knight is unimpeded in the middle of the board", func() {
@@ -485,7 +485,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_KNIGHT, &Square{4, 5}, &Square{2, 4}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_KNIGHT, &Square{4, 5}, &Square{2, 6}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("different pieces occupy land squares", func() {
@@ -497,7 +497,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_KNIGHT, &Square{7, 8}, &Square{8, 6}, BLACK_ROOK, make([]*Square, 0), EMPTY},
 					{WHITE_KNIGHT, &Square{7, 8}, &Square{5, 7}, BLACK_QUEEN, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("a move results in a discovered check", func() {
@@ -508,7 +508,7 @@ var _ = Describe("GameHelpers", func() {
 				expMoves := []Move{
 					{WHITE_KNIGHT, &Square{7, 8}, &Square{5, 7}, BLACK_QUEEN, []*Square{{5, 7}}, EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 			Context("and teh move is a discovered double check", func() {
 				It("returns a move with both the knight and the rook squares checking the king", func() {
@@ -518,7 +518,7 @@ var _ = Describe("GameHelpers", func() {
 					expMoves := []Move{
 						{WHITE_KNIGHT, &Square{7, 8}, &Square{5, 7}, BLACK_QUEEN, []*Square{{8, 8}, {5, 7}}, EMPTY},
 					}
-					compareMoves(&expMoves, realMoves)
+					compareMoves(expMoves, realMoves)
 				})
 			})
 		})
@@ -527,7 +527,7 @@ var _ = Describe("GameHelpers", func() {
 				board, _ := BoardFromFEN("k6n/8/8/8/8/8/8/RQ4K1 b - - 0 1")
 				realMoves, err := GetLegalMovesForKnight(board, &Square{8, 8})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(*realMoves).To(HaveLen(0))
+				Expect(realMoves).To(HaveLen(0))
 			})
 		})
 	})
@@ -552,7 +552,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_BISHOP, &Square{5, 5}, &Square{3, 7}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_BISHOP, &Square{5, 5}, &Square{2, 8}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("a friendly piece is blocking its path", func() {
@@ -564,7 +564,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_BISHOP, &Square{1, 1}, &Square{2, 2}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_BISHOP, &Square{1, 1}, &Square{3, 3}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("an enemy piece is blocking its path", func() {
@@ -577,7 +577,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_BISHOP, &Square{1, 1}, &Square{3, 3}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_BISHOP, &Square{1, 1}, &Square{4, 4}, BLACK_QUEEN, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the move results in a double king check", func() {
@@ -589,7 +589,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_BISHOP, &Square{5, 6}, &Square{4, 7}, EMPTY, []*Square{{7, 6}}, EMPTY},
 					{WHITE_BISHOP, &Square{5, 6}, &Square{3, 8}, EMPTY, []*Square{{7, 6}, {3, 8}}, EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the board is a terminal board", func() {
@@ -597,7 +597,7 @@ var _ = Describe("GameHelpers", func() {
 				board, _ := BoardFromFEN("k6b/8/8/8/8/8/R7/1Q4K1 b - - 0 1")
 				realMoves, err := GetLegalMovesForBishop(board, &Square{8, 8})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(*realMoves).To(HaveLen(0))
+				Expect(realMoves).To(HaveLen(0))
 			})
 		})
 	})
@@ -623,7 +623,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_ROOK, &Square{4, 4}, &Square{7, 4}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_ROOK, &Square{4, 4}, &Square{8, 4}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the rook is impeded by both friendly and enemy pieces", func() {
@@ -636,7 +636,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_ROOK, &Square{8, 1}, &Square{6, 1}, BLACK_QUEEN, make([]*Square, 0), EMPTY},
 					{WHITE_ROOK, &Square{8, 1}, &Square{8, 2}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the move results in a check", func() {
@@ -647,7 +647,7 @@ var _ = Describe("GameHelpers", func() {
 				expMoves := []Move{
 					{WHITE_ROOK, &Square{8, 1}, &Square{8, 2}, EMPTY, []*Square{{8, 2}}, EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the board is a terminal board", func() {
@@ -655,7 +655,7 @@ var _ = Describe("GameHelpers", func() {
 				board, _ := BoardFromFEN("k6r/8/8/8/8/8/8/RQ4K1 b - - 0 1")
 				realMoves, err := GetLegalMovesForRook(board, &Square{1, 1})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(*realMoves).To(HaveLen(0))
+				Expect(realMoves).To(HaveLen(0))
 			})
 		})
 	})
@@ -692,7 +692,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_QUEEN, &Square{4, 3}, &Square{2, 5}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_QUEEN, &Square{4, 3}, &Square{1, 6}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the queen is impeded by both friendly and enemy pieces", func() {
@@ -711,7 +711,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_QUEEN, &Square{1, 1}, &Square{1, 2}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_QUEEN, &Square{1, 1}, &Square{1, 3}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the move results in a check", func() {
@@ -722,7 +722,7 @@ var _ = Describe("GameHelpers", func() {
 				expMoves := []Move{
 					{WHITE_QUEEN, &Square{6, 7}, &Square{7, 7}, BLACK_PAWN, []*Square{{7, 7}}, EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the board is a terminal board", func() {
@@ -730,7 +730,7 @@ var _ = Describe("GameHelpers", func() {
 				board, _ := BoardFromFEN("k6q/8/8/8/8/8/R7/1Q4K1 b - - 0 1")
 				realMoves, err := GetLegalMovesForQueen(board, &Square{8, 8})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(*realMoves).To(HaveLen(0))
+				Expect(realMoves).To(HaveLen(0))
 			})
 		})
 	})
@@ -749,7 +749,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_KING, &Square{6, 6}, &Square{5, 6}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_KING, &Square{6, 6}, &Square{5, 7}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the king is unimpeded on the corner of the board", func() {
@@ -761,7 +761,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_KING, &Square{1, 8}, &Square{2, 7}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_KING, &Square{1, 8}, &Square{2, 8}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the king is two files away from the enemy king", func() {
@@ -775,7 +775,7 @@ var _ = Describe("GameHelpers", func() {
 					{WHITE_KING, &Square{5, 5}, &Square{5, 6}, EMPTY, make([]*Square, 0), EMPTY},
 					{WHITE_KING, &Square{5, 5}, &Square{4, 6}, EMPTY, make([]*Square, 0), EMPTY},
 				}
-				compareMoves(&expMoves, realMoves)
+				compareMoves(expMoves, realMoves)
 			})
 		})
 		When("the king has kingside castle rights", func() {
@@ -784,7 +784,7 @@ var _ = Describe("GameHelpers", func() {
 					It("does not return a king move to castle kingside", func() {
 						board, _ := BoardFromFEN("4k3/p7/8/8/8/8/3PPP2/3QK1NR w K - 0 1")
 						realMoves := GetLegalMovesForKing(board)
-						for _, realMove := range *realMoves {
+						for _, realMove := range realMoves {
 							Expect(realMove.EndSquare.EqualTo(&Square{1, 7})).To(BeFalse())
 						}
 					})
@@ -793,7 +793,7 @@ var _ = Describe("GameHelpers", func() {
 					It("does not return a king move to castle kingside", func() {
 						board, _ := BoardFromFEN("3pkb1r/3ppp2/8/8/8/8/8/3K4 b k - 0 1")
 						realMoves := GetLegalMovesForKing(board)
-						for _, realMove := range *realMoves {
+						for _, realMove := range realMoves {
 							Expect(realMove.EndSquare.EqualTo(&Square{8, 7})).To(BeFalse())
 						}
 					})
@@ -805,7 +805,7 @@ var _ = Describe("GameHelpers", func() {
 						board, _ := BoardFromFEN("4k3/p7/8/8/8/5N2/3PPP2/3QK2R w K - 0 1")
 						realMoves := GetLegalMovesForKing(board)
 						foundCastleMove := false
-						for _, realMove := range *realMoves {
+						for _, realMove := range realMoves {
 							if realMove.EndSquare.EqualTo(&Square{1, 7}) {
 								foundCastleMove = true
 								break
@@ -817,7 +817,7 @@ var _ = Describe("GameHelpers", func() {
 						It("does not return a king move to castle kingside", func() {
 							board, _ := BoardFromFEN("4k1r1/p7/8/8/8/5N2/3PPP2/3QK2R w K - 0 1")
 							realMoves := GetLegalMovesForKing(board)
-							for _, realMove := range *realMoves {
+							for _, realMove := range realMoves {
 								Expect(realMove.EndSquare.EqualTo(&Square{1, 7})).To(BeFalse())
 							}
 						})
@@ -828,7 +828,7 @@ var _ = Describe("GameHelpers", func() {
 						board, _ := BoardFromFEN("3pk2r/3ppp2/3b4/8/8/8/8/3K4 b k - 0 1")
 						realMoves := GetLegalMovesForKing(board)
 						foundCastleMove := false
-						for _, realMove := range *realMoves {
+						for _, realMove := range realMoves {
 							if realMove.EndSquare.EqualTo(&Square{8, 7}) {
 								foundCastleMove = true
 								break
@@ -846,7 +846,7 @@ var _ = Describe("GameHelpers", func() {
 				It("does not return a king move to castle kingside", func() {
 					realMoves := GetLegalMovesForKing(board)
 					foundCastleMove := false
-					for _, realMove := range *realMoves {
+					for _, realMove := range realMoves {
 						if realMove.EndSquare.EqualTo(&Square{8, 7}) {
 							foundCastleMove = true
 							break
@@ -862,7 +862,7 @@ var _ = Describe("GameHelpers", func() {
 					It("does not return a king move to castle queenside", func() {
 						board, _ := BoardFromFEN("4k3/8/2p5/8/8/8/3PPP2/R2QKB2 w Q - 0 1")
 						realMoves := GetLegalMovesForKing(board)
-						for _, realMove := range *realMoves {
+						for _, realMove := range realMoves {
 							Expect(realMove.EndSquare.EqualTo(&Square{1, 3})).To(BeFalse())
 						}
 					})
@@ -871,7 +871,7 @@ var _ = Describe("GameHelpers", func() {
 					It("does not return a king move to castle queenside", func() {
 						board, _ := BoardFromFEN("r2qkb2/3ppp2/8/8/8/8/3PPP2/R2QKB2 b q - 1 1")
 						realMoves := GetLegalMovesForKing(board)
-						for _, realMove := range *realMoves {
+						for _, realMove := range realMoves {
 							Expect(realMove.EndSquare.EqualTo(&Square{8, 3})).To(BeFalse())
 						}
 					})
@@ -883,7 +883,7 @@ var _ = Describe("GameHelpers", func() {
 						board, _ := BoardFromFEN("r2qkb2/3ppp2/8/8/8/8/3PPP2/R3KB2 w Qq - 1 1")
 						realMoves := GetLegalMovesForKing(board)
 						foundCastleMove := false
-						for _, realMove := range *realMoves {
+						for _, realMove := range realMoves {
 							if realMove.EndSquare.EqualTo(&Square{1, 3}) {
 								foundCastleMove = true
 								break
@@ -895,7 +895,7 @@ var _ = Describe("GameHelpers", func() {
 						It("does not return a king move to castle queenside", func() {
 							board, _ := BoardFromFEN("r2qkb2/3ppp2/8/8/8/8/3PPP2/R2QKB2 b q - 1 1")
 							realMoves := GetLegalMovesForKing(board)
-							for _, realMove := range *realMoves {
+							for _, realMove := range realMoves {
 								Expect(realMove.EndSquare.EqualTo(&Square{8, 3})).To(BeFalse())
 							}
 						})
@@ -906,7 +906,7 @@ var _ = Describe("GameHelpers", func() {
 						board, _ := BoardFromFEN("r3kb2/3ppp2/8/8/8/8/3PPP2/R3KB2 b Qq - 1 1")
 						realMoves := GetLegalMovesForKing(board)
 						foundCastleMove := false
-						for _, realMove := range *realMoves {
+						for _, realMove := range realMoves {
 							if realMove.EndSquare.EqualTo(&Square{8, 3}) {
 								foundCastleMove = true
 								break
@@ -921,7 +921,7 @@ var _ = Describe("GameHelpers", func() {
 			It("returns no moves", func() {
 				board, _ := BoardFromFEN("k7/8/8/8/8/8/8/RQ4K1 b - - 0 1")
 				realMoves := GetLegalMovesForKing(board)
-				Expect(*realMoves).To(HaveLen(0))
+				Expect(realMoves).To(HaveLen(0))
 			})
 		})
 	})
@@ -948,82 +948,55 @@ var _ = Describe("GameHelpers", func() {
 			})
 		})
 	})
-	Describe("#GetLegalMoves", func() {
-		When("the board is the initialize board", func() {
-			var board *Board
-			var boardMoves *[8][8][]*Move
-			var movesCount uint8
+	Describe("#HasLegalMove", func() {
+		var board *Board
+		When("the board has legal moves", func() {
 			BeforeEach(func() {
 				board = GetInitBoard()
-				boardMoves, movesCount = GetLegalMoves(board, false)
 			})
-			It("returns the total legal moves for white", func() {
-				Expect(movesCount).To(Equal(uint8(20)))
-			})
-			DescribeTable("returns the correct length of moves for a square",
-				func(r int, c int, expMoveLength int) {
-					squareMoves := boardMoves[r][c]
-					Expect(squareMoves).To(HaveLen(expMoveLength))
-				},
-				Entry("A-pawn has two moves", 1, 0, 2),
-				Entry("B-pawn has two moves", 1, 1, 2),
-				Entry("C-pawn has two moves", 1, 2, 2),
-				Entry("D-pawn has two moves", 1, 3, 2),
-				Entry("E-pawn has two moves", 1, 4, 2),
-				Entry("F-pawn has two moves", 1, 5, 2),
-				Entry("G-pawn has two moves", 1, 6, 2),
-				Entry("H-pawn has two moves", 1, 7, 2),
-				Entry("queens rook has no moves", 0, 0, 0),
-				Entry("queens knight has two moves", 0, 1, 2),
-				Entry("queens bishop has no moves", 0, 2, 0),
-				Entry("queen has no moves", 0, 3, 0),
-				Entry("king has no moves", 0, 4, 0),
-				Entry("king's bishop has no moves", 0, 5, 0),
-				Entry("king's knight has two moves", 0, 6, 2),
-				Entry("king's rook has no moves", 0, 7, 0),
-			)
-			It("returns no moves for the non-active player", func() {
-				for r := 6; r < 8; r++ {
-					for c := 0; c < 8; c++ {
-						blackPieceMoves := boardMoves[r][c]
-						Expect(blackPieceMoves).To(BeEmpty())
-					}
-				}
-			})
-			It("returns no moves for empty squares", func() {
-				for r := 0; r < 8; r++ {
-					for c := 0; c < 8; c++ {
-						square := Square{uint8(r + 1), uint8(c + 1)}
-						if piece := board.GetPieceOnSquare(&square); piece == EMPTY {
-							squareMoves := boardMoves[r][c]
-							Expect(squareMoves).To(BeEmpty())
-						}
-					}
-				}
+			It("returns true", func() {
+				Expect(HasLegalMove(board)).To(BeTrue())
 			})
 		})
-		When("the board is from the scotch opening", func() {
-			var board *Board
+		When("the board does not have legal moves", func() {
 			BeforeEach(func() {
-				board, _ = BoardFromFEN("rnbqkbnr/pppp1ppp/8/4p3/3PP3/8/PPP2PPP/RNBQKBNR b KQkq d3 0 2")
+				var boardErr error
+				board, boardErr = BoardFromFEN("8/8/2k2K2/5N2/8/8/8/8 w - - 0 1")
+				Expect(boardErr).To(Succeed())
 			})
-			It("returns the correct number of legal moves for white", func() {
-				_, movesCount := GetLegalMoves(board, false)
-				Expect(movesCount).To(Equal(uint8(30)))
-			})
-		})
-		When("the board is a draw board", func() {
-			var board *Board
-			BeforeEach(func() {
-				var err error
-				board, err = BoardFromFEN("8/8/2k2K2/5N2/8/8/8/8 w - - 0 1")
-				Expect(err).ToNot(HaveOccurred())
-			})
-			It("returns no moves", func() {
-				_, legalMovesCount := GetLegalMoves(board, false)
-				Expect(legalMovesCount).To(Equal(uint8(0)))
+			It("returns false", func() {
+				Expect(HasLegalMove(board)).To(BeFalse())
 			})
 		})
+	})
+	Describe("#GetLegalMovesByOrigin", func() {
+		var board *Board
+		BeforeEach(func() {
+			board = GetInitBoard()
+		})
+		DescribeTable("returns the correct length of moves for a square",
+			func(r int, c int, expMoveLen int) {
+				square := Square{uint8(r), uint8(c)}
+				moves, movesErr := GetLegalMovesFromOrigin(board, &square)
+				Expect(movesErr).To(Succeed())
+				Expect(moves).To(HaveLen(expMoveLen))
+			},
+			Entry("A-pawn has two moves", 2, 1, 2),
+			Entry("B-pawn has two moves", 2, 2, 2),
+			Entry("C-pawn has two moves", 2, 3, 2),
+			Entry("D-pawn has two moves", 2, 4, 2),
+			Entry("E-pawn has two moves", 2, 5, 2),
+			Entry("F-pawn has two moves", 2, 6, 2),
+			Entry("G-pawn has two moves", 2, 7, 2),
+			Entry("H-pawn has two moves", 2, 8, 2),
+			Entry("queens rook has no moves", 1, 1, 0),
+			Entry("queens knight has two moves", 1, 2, 2),
+			Entry("queens bishop has no moves", 1, 3, 0),
+			Entry("queen has no moves", 1, 4, 0),
+			Entry("king has no moves", 1, 5, 0),
+			Entry("king's bishop has no moves", 1, 6, 0),
+			Entry("king's knight has two moves", 1, 7, 2),
+			Entry("king's rook has no moves", 1, 8, 0))
 	})
 	Describe("#GetBoardFromMove", func() {
 		var board *Board
