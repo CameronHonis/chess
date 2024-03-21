@@ -12,8 +12,8 @@ func NewBoardBuilder() *BoardBuilder {
 	}
 }
 
-func (bb *BoardBuilder) WithPieces(pieces *[8][8]Piece) *BoardBuilder {
-	bb.board.Pieces = *pieces
+func (bb *BoardBuilder) WithPieces(pieces [8][8]Piece) *BoardBuilder {
+	bb.board.Pieces = pieces
 	bb.board.optMaterialCount = nil
 	return bb
 }
@@ -89,6 +89,12 @@ func (bb *BoardBuilder) WithRepetitionsByMiniFEN(repetitionsByMiniFEN map[string
 }
 
 func (bb *BoardBuilder) WithMiniFENCount(miniFEN string, count uint8) *BoardBuilder {
+	repsByMiniFENCopy := make(map[string]uint8)
+	for key, value := range bb.board.RepetitionsByMiniFEN {
+		repsByMiniFENCopy[key] = value
+	}
+
+	bb.board.RepetitionsByMiniFEN = repsByMiniFENCopy
 	bb.board.RepetitionsByMiniFEN[miniFEN] = count
 	return bb
 }
@@ -101,6 +107,7 @@ func (bb *BoardBuilder) WithResult(result BoardResult) *BoardBuilder {
 func (bb *BoardBuilder) FromBoard(board *Board) *BoardBuilder {
 	boardCopy := *board
 	bb.board = &boardCopy
+
 	return bb
 }
 

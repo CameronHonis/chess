@@ -115,7 +115,7 @@ func BoardFromFEN(fen string) (*Board, error) {
 			if rank > 1 {
 				return nil, fmt.Errorf("invalid FEN: not enough rows")
 			}
-			boardBuilder.WithPieces(&pieces)
+			boardBuilder.WithPieces(pieces)
 			boardBuilder.board.optMaterialCount = materialCountBuilder.Build()
 		} else if fenSegIdx == 1 {
 			if fenSeg == "w" {

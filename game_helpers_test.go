@@ -1003,7 +1003,7 @@ var _ = Describe("GameHelpers", func() {
 	Describe("#GetBoardFromMove", func() {
 		var board *Board
 		var move Move
-		FIt("does not affect the input board", func() {
+		It("does not affect the input board", func() {
 			board = GetInitBoard()
 			move = Move{
 				WHITE_KNIGHT,
