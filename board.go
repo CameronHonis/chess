@@ -47,6 +47,7 @@ func NewBoard(pieces *[8][8]Piece,
 }
 
 func BoardFromFEN(fen string) (*Board, error) {
+	fen = strings.TrimSpace(fen)
 	pieceByFENrune := map[rune]Piece{
 		'p': BLACK_PAWN,
 		'n': BLACK_KNIGHT,

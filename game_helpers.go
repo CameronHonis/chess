@@ -542,11 +542,10 @@ func GetLegalMoves(board *Board) ([]*Move, error) {
 	for rank := uint8(1); rank < 9; rank++ {
 		for file := uint8(1); file < 9; file++ {
 			square := &Square{rank, file}
-			squareMoves, movesErr := GetLegalMovesFromOrigin(board, square)
-			if movesErr != nil {
-				return make([]*Move, 0), fmt.Errorf("cannot generate moves on square %s on board %s: %s", square, board, movesErr)
+			squareMoves, _ := GetLegalMovesFromOrigin(board, square)
+			if squareMoves != nil {
+				moves = append(moves, squareMoves...)
 			}
-			moves = append(moves, squareMoves...)
 		}
 	}
 	return moves, nil

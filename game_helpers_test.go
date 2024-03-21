@@ -1,6 +1,8 @@
 package chess_test
 
 import (
+	"encoding/json"
+	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -1001,6 +1003,26 @@ var _ = Describe("GameHelpers", func() {
 	Describe("#GetBoardFromMove", func() {
 		var board *Board
 		var move Move
+		FIt("does not affect the input board", func() {
+			board = GetInitBoard()
+			move = Move{
+				WHITE_KNIGHT,
+				&Square{1, 2},
+				&Square{3, 3},
+				EMPTY,
+				make([]*Square, 0),
+				EMPTY,
+			}
+			boardJson, jsonParseErr := json.Marshal(board)
+			Expect(jsonParseErr).To(Succeed())
+
+			_ = GetBoardFromMove(board, &move)
+
+			newBoardJson, jsonParseErr := json.Marshal(board)
+			Expect(jsonParseErr).To(Succeed())
+			Expect(string(newBoardJson)).To(Equal(string(boardJson)))
+			fmt.Println(string(newBoardJson))
+		})
 		When("the move is a capture", func() {
 			BeforeEach(func() {
 				initBoard, _ := BoardFromFEN("k7/p2n4/8/8/6B1/8/8/7K w - - 0 1")
