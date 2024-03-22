@@ -862,7 +862,7 @@ var _ = Describe("GameHelpers", func() {
 			Context("and a piece occupies a square between the king and queenside rook", func() {
 				Context("and the king is white", func() {
 					It("does not return a king move to castle queenside", func() {
-						board, _ := BoardFromFEN("4k3/8/2p5/8/8/8/3PPP2/R2QKB2 w Q - 0 1")
+						board, _ := BoardFromFEN("4k3/8/2p5/8/8/8/3PPP2/RQ2KB2 w Q - 0 1")
 						realMoves := GetLegalMovesForKing(board)
 						for _, realMove := range realMoves {
 							Expect(realMove.EndSquare.EqualTo(&Square{1, 3})).To(BeFalse())

@@ -14,6 +14,7 @@ import (
 
 const PRINT_LEAFS = true
 const FOCUS_TEST_IDX = 1
+const MAX_DEPTH = 3
 
 var scanner *bufio.Scanner
 
@@ -26,6 +27,9 @@ func perft(board *chess.Board, depth int) int {
 	nodeCnt := 0
 	for _, move := range moves {
 		nextBoard := chess.GetBoardFromMove(board, move)
+		if leaf && PRINT_LEAFS {
+			fmt.Printf("leaf %s\n", nextBoard.ToFEN())
+		}
 		if nextBoard.Result != chess.BOARD_RESULT_IN_PROGRESS {
 			if leaf {
 				nodeCnt++
@@ -33,9 +37,6 @@ func perft(board *chess.Board, depth int) int {
 			continue
 		}
 		if leaf {
-			if PRINT_LEAFS {
-				fmt.Printf("leaf %s\n", nextBoard.ToFEN())
-			}
 			nodeCnt++
 		} else {
 			nodeCnt += perft(nextBoard, depth-1)
@@ -113,4 +114,10 @@ func perft_from_file() {
 
 var _ = It("perft", func() {
 	perft_from_file()
+})
+
+var _ = FIt("temp", func() {
+	fen := "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+	board, _ := chess.BoardFromFEN(fen)
+	perft(board, 3)
 })

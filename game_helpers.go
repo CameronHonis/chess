@@ -599,9 +599,11 @@ func canCastleQueenside(board *Board, square *Square) bool {
 
 	kingLeftSquare := Square{square.Rank, square.File - 1}
 	kingLeftTwoSquare := Square{square.Rank, square.File - 2}
+	kingLeftThreeSquare := Square{square.Rank, square.File - 3}
 	kingLeftPiece := board.GetPieceOnSquare(&kingLeftSquare)
 	kingTwoLeftPiece := board.GetPieceOnSquare(&kingLeftTwoSquare)
-	if kingLeftPiece != EMPTY || kingTwoLeftPiece != EMPTY {
+	kingThreeLeftPiece := board.GetPieceOnSquare(&kingLeftThreeSquare)
+	if kingLeftPiece != EMPTY || kingTwoLeftPiece != EMPTY || kingThreeLeftPiece != EMPTY {
 		return false
 	}
 
