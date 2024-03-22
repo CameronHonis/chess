@@ -1490,6 +1490,16 @@ var _ = Describe("GameHelpers", func() {
 				})
 			})
 		})
+		When("the move updates castling rights", func() {
+			BeforeEach(func() {
+				initBoard, _ := BoardFromFEN("4k2r/8/8/8/8/8/8/R3K2R w KQ - 1 1")
+				move = Move{WHITE_ROOK, &Square{1, 8}, &Square{2, 8}, EMPTY, make([]*Square, 0), EMPTY}
+				board = GetBoardFromMove(initBoard, &move)
+			})
+			It("resets the half move clock", func() {
+				Expect(board.HalfMoveClockCount).To(Equal(uint8(0)))
+			})
+		})
 	})
 	Describe("#UpdatePiecesFromMove", func() {
 		var board *Board

@@ -623,12 +623,13 @@ func GetBoardFromMove(board *Board, move *Move) *Board {
 	boardBuilder := NewBoardBuilder().FromBoard(board)
 
 	UpdatePiecesFromMove(board, boardBuilder, move)
-	UpdateBoardCounters(board, boardBuilder, move)
 	UpdateBoardEnPassantSquare(board, boardBuilder, move)
+
+	UpdateCastleRights(board, boardBuilder, move)
+	UpdateBoardCounters(board, boardBuilder, move)
 
 	boardBuilder.WithIsWhiteTurn(!board.IsWhiteTurn)
 
-	UpdateCastleRights(board, boardBuilder, move)
 	repetitions := UpdateRepetitionsByFENMap(board, boardBuilder, move)
 	UpdateBoardResult(board, boardBuilder, repetitions)
 
@@ -676,11 +677,17 @@ func UpdatePiecesFromMove(lastBoard *Board, boardBuilder *BoardBuilder, move *Mo
 }
 
 func UpdateBoardCounters(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {
-	if move.CapturedPiece != EMPTY || move.Piece.IsPawn() {
+	isCastleRightsUpdated := lastBoard.CanWhiteCastleKingside != boardBuilder.board.CanWhiteCastleKingside ||
+		lastBoard.CanWhiteCastleQueenside != boardBuilder.board.CanWhiteCastleQueenside ||
+		lastBoard.CanBlackCastleKingside != boardBuilder.board.CanBlackCastleKingside ||
+		lastBoard.CanBlackCastleQueenside != boardBuilder.board.CanBlackCastleQueenside
+	isHalfMoveClockReset := move.CapturedPiece != EMPTY || move.Piece.IsPawn() || isCastleRightsUpdated
+	if isHalfMoveClockReset {
 		boardBuilder.WithHalfMoveClockCount(0)
 	} else {
 		boardBuilder.WithHalfMoveClockCount(lastBoard.HalfMoveClockCount + 1)
 	}
+
 	if !lastBoard.IsWhiteTurn {
 		boardBuilder.WithFullMoveCount(lastBoard.FullMoveCount + 1)
 	}

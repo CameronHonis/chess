@@ -111,6 +111,6 @@ func perft_from_file() {
 	_ = file.Close()
 }
 
-var _ = FIt("perft", func() {
+var _ = It("perft", func() {
 	perft_from_file()
 })
