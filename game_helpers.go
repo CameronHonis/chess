@@ -697,17 +697,27 @@ func UpdateBoardEnPassantSquare(lastBoard *Board, boardBuilder *BoardBuilder, mo
 	}
 }
 func UpdateCastleRights(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {
+	if move.EndSquare.EqualTo(&Square{8, 1}) {
+		boardBuilder.WithCanBlackCastleQueenside(false)
+	} else if move.EndSquare.EqualTo(&Square{8, 8}) {
+		boardBuilder.WithCanBlackCastleKingside(false)
+	} else if move.EndSquare.EqualTo(&Square{1, 1}) {
+		boardBuilder.WithCanWhiteCastleQueenside(false)
+	} else if move.EndSquare.EqualTo(&Square{1, 8}) {
+		boardBuilder.WithCanWhiteCastleKingside(false)
+	}
+
 	if !move.Piece.IsKing() && !move.Piece.IsRook() {
 		return
 	}
 	if move.Piece.IsRook() {
-		if lastBoard.CanWhiteCastleQueenside && move.StartSquare.EqualTo(&Square{1, 1}) {
+		if move.StartSquare.EqualTo(&Square{1, 1}) {
 			boardBuilder.WithCanWhiteCastleQueenside(false)
-		} else if lastBoard.CanWhiteCastleKingside && move.StartSquare.EqualTo(&Square{1, 8}) {
+		} else if move.StartSquare.EqualTo(&Square{1, 8}) {
 			boardBuilder.WithCanWhiteCastleKingside(false)
-		} else if lastBoard.CanBlackCastleQueenside && move.StartSquare.EqualTo(&Square{8, 1}) {
+		} else if move.StartSquare.EqualTo(&Square{8, 1}) {
 			boardBuilder.WithCanBlackCastleQueenside(false)
-		} else if lastBoard.CanBlackCastleKingside && move.StartSquare.EqualTo(&Square{8, 8}) {
+		} else if move.StartSquare.EqualTo(&Square{8, 8}) {
 			boardBuilder.WithCanBlackCastleKingside(false)
 		}
 	} else if move.Piece.IsKing() {

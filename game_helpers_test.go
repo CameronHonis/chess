@@ -1047,7 +1047,7 @@ var _ = Describe("GameHelpers", func() {
 				_, ok := board.RepetitionsByMiniFEN["asdf"]
 				Expect(ok).To(BeFalse())
 			})
-			Context("and the capture is an en passant move", func() {
+			When("the capture is an en passant move", func() {
 				BeforeEach(func() {
 					initBoard, _ := BoardFromFEN("k7/8/4pP2/8/8/8/8/7K w - e7 0 1")
 					move = Move{WHITE_PAWN, &Square{6, 6}, &Square{7, 5}, BLACK_PAWN, make([]*Square, 0), EMPTY}
@@ -1057,6 +1057,16 @@ var _ = Describe("GameHelpers", func() {
 					Expect(board.GetPieceOnSquare(&Square{6, 6})).To(Equal(EMPTY))
 					Expect(board.GetPieceOnSquare(&Square{6, 5})).To(Equal(EMPTY))
 					Expect(board.GetPieceOnSquare(&Square{7, 5})).To(Equal(WHITE_PAWN))
+				})
+			})
+			When("the move is a capture on a 'castle-able' rook", func() {
+				BeforeEach(func() {
+					initBoard, _ := BoardFromFEN("4k2r/8/6N1/8/8/8/8/R3K3 w k - 0 1")
+					move = Move{WHITE_KNIGHT, &Square{6, 7}, &Square{8, 8}, BLACK_ROOK, make([]*Square, 0), EMPTY}
+					board = GetBoardFromMove(initBoard, &move)
+				})
+				It("revokes the enemy king castle right on that side", func() {
+					Expect(board.CanBlackCastleKingside).To(BeFalse())
 				})
 			})
 		})

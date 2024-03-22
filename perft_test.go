@@ -4,14 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/CameronHonis/chess"
+	. "github.com/onsi/ginkgo/v2"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-	"testing"
+	"time"
 )
 
 const PRINT_LEAFS = true
+const FOCUS_TEST_IDX = 1
 
 var scanner *bufio.Scanner
 
@@ -24,6 +26,12 @@ func perft(board *chess.Board, depth int) int {
 	nodeCnt := 0
 	for _, move := range moves {
 		nextBoard := chess.GetBoardFromMove(board, move)
+		if nextBoard.Result != chess.BOARD_RESULT_IN_PROGRESS {
+			if leaf {
+				nodeCnt++
+			}
+			continue
+		}
 		if leaf {
 			if PRINT_LEAFS {
 				fmt.Printf("leaf %s\n", nextBoard.ToFEN())
@@ -36,33 +44,29 @@ func perft(board *chess.Board, depth int) int {
 	return nodeCnt
 }
 
-//func compareNodeCounts(board *chess.Board, nodeCountByDepth []int) {
-//	depth := len(nodeCountByDepth)
-//	var currBoards = []*chess.Board{board}
-//	var nextBoards = make([]*chess.Board, 0)
-//	for i := 0; i < depth; i++ {
-//		expNodes := nodeCountByDepth[i]
-//		for _, currBoard := range currBoards {
-//			moves, movesErr := chess.GetLegalMoves(board)
-//			if movesErr != nil {
-//				log.Fatalf("error getting moves for board %s: %s", currBoard, movesErr)
-//			}
-//			for _, move := range moves {
-//				nextBoard := chess.GetBoardFromMove(board, move)
-//				nextBoards = append(nextBoards, nextBoard)
-//			}
-//		}
-//
-//		log.Println(i, len(nextBoards))
-//		if len(nextBoards) != expNodes {
-//			log.Fatalf("incorrect number of game nodes from %s at depth %d, actual %d vs expected %d", board, i, len(nextBoards), expNodes)
-//		}
-//		currBoards = nextBoards
-//		nextBoards = make([]*chess.Board, 0)
-//	}
-//}
+func parsePerftLine(line string) (fen string, depthNodeCntPairs [][2]int) {
+	splitTxt := strings.Split(line, ";")
+	fen = splitTxt[0]
+	depthNodeCntPairs = make([][2]int, 0)
+	for _, perftStr := range splitTxt[1:] {
+		perftStrSplit := strings.Split(perftStr, " ")
+		depthStr := perftStrSplit[0][1:]
+		depth, parseDepthErr := strconv.Atoi(depthStr)
+		if parseDepthErr != nil {
+			log.Fatalf("could not parse depth from %s:\n\t%s", depthStr, parseDepthErr)
+		}
 
-func TestPerf(t *testing.T) {
+		expNodeCntStr := perftStrSplit[1]
+		expNodeCnt, parseNodeCntErr := strconv.Atoi(expNodeCntStr)
+		if parseNodeCntErr != nil {
+			log.Fatalf("could not parse expNodeCnt from %s:\n\t%s", expNodeCntStr, parseNodeCntErr)
+		}
+		depthNodeCntPairs = append(depthNodeCntPairs, [2]int{depth, expNodeCnt})
+	}
+	return fen, depthNodeCntPairs
+}
+
+func perft_from_file() {
 	file, err := os.Open("./perft")
 	if err != nil {
 		log.Fatalf("failed to open file: %s", err)
@@ -70,33 +74,43 @@ func TestPerf(t *testing.T) {
 
 	scanner = bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
-	//var rawTxt []string
+
+	testIdx := 0
 	for scanner.Scan() {
-		splitTxt := strings.Split(scanner.Text(), ";")
-		fen := splitTxt[0]
+		currTestIdx := testIdx
+		testIdx++
+
+		shouldSkipTest := FOCUS_TEST_IDX >= 0 && FOCUS_TEST_IDX != currTestIdx
+		if shouldSkipTest {
+			continue
+		}
+		line := scanner.Text()
+		fmt.Printf("%s\n", line)
+		fen, depthNodeCntPairs := parsePerftLine(line)
+
 		board, boardErr := chess.BoardFromFEN(fen)
 		if boardErr != nil {
 			log.Fatalf("could not construct board from FEN %s:\n\t%s", fen, boardErr)
 		}
-		for _, perftStr := range splitTxt[1:] {
-			perftStrSplit := strings.Split(perftStr, " ")
-			depthStr := perftStrSplit[0][1:]
-			depth, parseDepthErr := strconv.Atoi(depthStr)
-			if parseDepthErr != nil {
-				log.Fatalf("could not parse depth from %s:\n\t%s", depthStr, parseDepthErr)
-			}
 
-			expNodeCntStr := perftStrSplit[1]
-			expNodeCnt, parseNodeCntErr := strconv.Atoi(expNodeCntStr)
-			if parseNodeCntErr != nil {
-				log.Fatalf("could not parse expNodeCnt from %s:\n\t%s", expNodeCntStr, parseNodeCntErr)
-			}
+		for _, depthNodeCntPair := range depthNodeCntPairs {
+			depth := depthNodeCntPair[0]
+			expNodeCnt := depthNodeCntPair[1]
+
+			start := time.Now()
 			actNodeCnt := perft(board, depth)
 			if actNodeCnt != expNodeCnt {
-				log.Fatalf("node count mismatch, actual (%d) vs expected (%d)", actNodeCnt, expNodeCnt)
+				log.Fatalf("node count mismatch at depth %d,  actual (%d) vs expected (%d)", depth, actNodeCnt, expNodeCnt)
+			} else {
+				elapsed := time.Since(start)
+				fmt.Printf("depth %d passed in %s\n", depth, elapsed)
 			}
 		}
 	}
 
 	_ = file.Close()
 }
+
+var _ = FIt("perft", func() {
+	perft_from_file()
+})
