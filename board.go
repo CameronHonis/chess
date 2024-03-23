@@ -384,6 +384,10 @@ func (board *Board) IsInitBoard() bool {
 	return board.ToMiniFEN() == "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -" && board.FullMoveCount == uint16(1)
 }
 
+func (board *Board) IsCheckmate() bool {
+	return board.Result == BOARD_RESULT_WHITE_WINS_BY_CHECKMATE || board.Result == BOARD_RESULT_BLACK_WINS_BY_CHECKMATE
+}
+
 func (board *Board) String() string {
 	return fmt.Sprintf("Board<%s>", board.ToFEN())
 }
