@@ -766,6 +766,16 @@ var _ = Describe("GameHelpers", func() {
 				compareMoves(expMoves, realMoves)
 			})
 		})
+		When("the king wants to play the bongcloud", func() {
+			It("returns the bongcloud move", func() {
+				board, _ := BoardFromFEN("r1bqkbnr/pppppppp/2n5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 1")
+				realMoves := GetLegalMovesForKing(board)
+				expMoves := []Move{
+					{WHITE_KING, &Square{1, 5}, &Square{2, 5}, EMPTY, make([]*Square, 0), EMPTY},
+				}
+				compareMoves(expMoves, realMoves)
+			})
+		})
 		When("the king is two files away from the enemy king", func() {
 			It("does not include moves that 'touch' the enemy king", func() {
 				board, _ := BoardFromFEN("8/p7/8/2k1K3/8/8/8/8 w - - 0 1")
@@ -821,6 +831,18 @@ var _ = Describe("GameHelpers", func() {
 							realMoves := GetLegalMovesForKing(board)
 							for _, realMove := range realMoves {
 								Expect(realMove.EndSquare.EqualTo(&Square{1, 7})).To(BeFalse())
+							}
+						})
+					})
+					Context("and the black king is on g2", func() {
+						var board *Board
+						BeforeEach(func() {
+							board, _ = BoardFromFEN("8/8/8/8/8/8/6k1/4K2R w K - 0 1")
+						})
+						It("does not return a king move to castle kingside", func() {
+							moves := GetLegalMovesForKing(board)
+							for _, move := range moves {
+								Expect(move.EndSquare.EqualTo(&Square{1, 7})).To(BeFalse())
 							}
 						})
 					})

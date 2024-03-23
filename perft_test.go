@@ -13,12 +13,16 @@ import (
 )
 
 const PRINT_LEAFS = true
-const FOCUS_TEST_IDX = 1
+const FOCUS_TEST_IDX = 8
 const MAX_DEPTH = 3
 
 var scanner *bufio.Scanner
 
 func perft(board *chess.Board, depth int) int {
+	return _perft(board, depth, make([]*chess.Move, 0))
+}
+
+func _perft(board *chess.Board, depth int, hist []*chess.Move) int {
 	moves, movesErr := chess.GetLegalMoves(board)
 	if movesErr != nil {
 		log.Fatalf("error getting moves for board %s: %s", board, movesErr)
@@ -27,8 +31,10 @@ func perft(board *chess.Board, depth int) int {
 	nodeCnt := 0
 	for _, move := range moves {
 		nextBoard := chess.GetBoardFromMove(board, move)
+		newHist := hist
+		newHist = append(newHist, move)
 		if leaf && PRINT_LEAFS {
-			fmt.Printf("leaf %s\n", nextBoard.ToFEN())
+			printLeaf(nextBoard, newHist)
 		}
 		if nextBoard.Result != chess.BOARD_RESULT_IN_PROGRESS {
 			if leaf {
@@ -39,10 +45,21 @@ func perft(board *chess.Board, depth int) int {
 		if leaf {
 			nodeCnt++
 		} else {
-			nodeCnt += perft(nextBoard, depth-1)
+			nodeCnt += _perft(nextBoard, depth-1, newHist)
 		}
 	}
 	return nodeCnt
+}
+
+func printLeaf(board *chess.Board, moves []*chess.Move) {
+	out := strings.Builder{}
+	out.WriteString("leaf ")
+	out.WriteString(board.ToFEN())
+	out.WriteString(" | ")
+	for _, move := range moves {
+		out.WriteString(fmt.Sprintf("%s%s ", move.StartSquare.ToAlgebraicCoords(), move.EndSquare.ToAlgebraicCoords()))
+	}
+	fmt.Println(out.String())
 }
 
 func parsePerftLine(line string) (fen string, depthNodeCntPairs [][2]int) {
@@ -67,7 +84,7 @@ func parsePerftLine(line string) (fen string, depthNodeCntPairs [][2]int) {
 	return fen, depthNodeCntPairs
 }
 
-func perft_from_file() {
+func perftFromFile() {
 	file, err := os.Open("./perft")
 	if err != nil {
 		log.Fatalf("failed to open file: %s", err)
@@ -86,7 +103,7 @@ func perft_from_file() {
 			continue
 		}
 		line := scanner.Text()
-		fmt.Printf("%s\n", line)
+		fmt.Printf("[TEST %d] %s\n", currTestIdx, line)
 		fen, depthNodeCntPairs := parsePerftLine(line)
 
 		board, boardErr := chess.BoardFromFEN(fen)
@@ -98,10 +115,14 @@ func perft_from_file() {
 			depth := depthNodeCntPair[0]
 			expNodeCnt := depthNodeCntPair[1]
 
+			if depth > MAX_DEPTH {
+				continue
+			}
+
 			start := time.Now()
 			actNodeCnt := perft(board, depth)
 			if actNodeCnt != expNodeCnt {
-				log.Fatalf("node count mismatch at depth %d,  actual (%d) vs expected (%d)", depth, actNodeCnt, expNodeCnt)
+				log.Fatalf("node count mismatch at depth %d, actual %d vs exp %d", depth, actNodeCnt, expNodeCnt)
 			} else {
 				elapsed := time.Since(start)
 				fmt.Printf("depth %d passed in %s\n", depth, elapsed)
@@ -113,11 +134,7 @@ func perft_from_file() {
 }
 
 var _ = It("perft", func() {
-	perft_from_file()
-})
-
-var _ = FIt("temp", func() {
-	fen := "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
-	board, _ := chess.BoardFromFEN(fen)
-	perft(board, 3)
+	perftFromFile()
+	//board, _ := chess.BoardFromFEN("8/8/8/8/8/8/6k1/4K2R w K - 0 1")
+	//perft(board, 3)
 })

@@ -116,6 +116,29 @@ func filterMovesByKingSafety(board *Board, moves []*Move) []*Move {
 	return filteredMoves
 }
 
+func filterMovesByKingCollision(board *Board, moves []*Move) []*Move {
+	filteredMoves := make([]*Move, 0, len(moves))
+	enemyKingSquare := board.GetKingSquare(!board.IsWhiteTurn)
+	for _, move := range moves {
+		var rankDiff, fileDiff uint8
+		if move.EndSquare.Rank > enemyKingSquare.Rank {
+			rankDiff = move.EndSquare.Rank - enemyKingSquare.Rank
+		} else {
+			rankDiff = enemyKingSquare.Rank - move.EndSquare.Rank
+		}
+		if move.EndSquare.File > enemyKingSquare.File {
+			fileDiff = move.EndSquare.File - enemyKingSquare.File
+		} else {
+			fileDiff = enemyKingSquare.File - move.EndSquare.File
+		}
+		kingsCollide := rankDiff <= 1 && fileDiff <= 1
+		if !kingsCollide {
+			filteredMoves = append(filteredMoves, move)
+		}
+	}
+	return filteredMoves
+}
+
 func addKingChecksToMoves(board *Board, moves *[]*Move) {
 	for _, move := range *moves {
 		boardBuilder := NewBoardBuilder().FromBoard(board)
@@ -383,51 +406,43 @@ func GetLegalMovesForKing(board *Board) []*Move {
 		return emptyMoves
 	}
 	kingMoves := make([]*Move, 0)
-	whiteKingSquare, blackKingSquare := board.ComputeKingPositions()
-	var square *Square
+	originSquare := board.GetKingSquare(board.IsWhiteTurn)
 	var piece Piece
 	if board.IsWhiteTurn {
-		square = whiteKingSquare
 		piece = WHITE_KING
 	} else {
-		square = blackKingSquare
 		piece = BLACK_KING
 	}
 	landSquares := []*Square{
-		{square.Rank + 1, square.File - 1},
-		{square.Rank + 1, square.File},
-		{square.Rank + 1, square.File + 1},
-		{square.Rank, square.File - 1},
-		{square.Rank, square.File + 1},
-		{square.Rank - 1, square.File - 1},
-		{square.Rank - 1, square.File},
-		{square.Rank - 1, square.File + 1},
+		{originSquare.Rank + 1, originSquare.File - 1},
+		{originSquare.Rank + 1, originSquare.File},
+		{originSquare.Rank + 1, originSquare.File + 1},
+		{originSquare.Rank, originSquare.File - 1},
+		{originSquare.Rank, originSquare.File + 1},
+		{originSquare.Rank - 1, originSquare.File - 1},
+		{originSquare.Rank - 1, originSquare.File},
+		{originSquare.Rank - 1, originSquare.File + 1},
 	}
-	enemyKingSquare := board.GetKingSquare(!board.IsWhiteTurn)
 	for _, landSquare := range landSquares {
 		if !landSquare.IsValidBoardSquare() {
 			continue
 		}
-		enemyKingRankDis := math.Abs(float64(int(enemyKingSquare.Rank) - int(landSquare.Rank)))
-		enemyKingFileDis := math.Abs(float64(int(enemyKingSquare.File) - int(landSquare.File)))
-		if enemyKingRankDis < 2 && enemyKingFileDis < 2 {
-			continue
-		}
 		landPiece := board.GetPieceOnSquare(landSquare)
 		if landPiece == EMPTY || landPiece.IsWhite() != piece.IsWhite() {
-			move := Move{piece, square, landSquare, landPiece, make([]*Square, 0), EMPTY}
+			move := Move{piece, originSquare, landSquare, landPiece, make([]*Square, 0), EMPTY}
 			kingMoves = append(kingMoves, &move)
 		}
 	}
-	if canCastleKingside(board, square) {
-		kingDestSquare := Square{square.Rank, square.File + 2}
-		kingMoves = append(kingMoves, &Move{piece, square, &kingDestSquare, EMPTY, make([]*Square, 0), EMPTY})
+	if canCastleKingside(board, originSquare) {
+		kingDestSquare := Square{originSquare.Rank, originSquare.File + 2}
+		kingMoves = append(kingMoves, &Move{piece, originSquare, &kingDestSquare, EMPTY, make([]*Square, 0), EMPTY})
 	}
-	if canCastleQueenside(board, square) {
-		kingDestSquare := Square{square.Rank, square.File - 2}
-		kingMoves = append(kingMoves, &Move{piece, square, &kingDestSquare, EMPTY, make([]*Square, 0), EMPTY})
+	if canCastleQueenside(board, originSquare) {
+		kingDestSquare := Square{originSquare.Rank, originSquare.File - 2}
+		kingMoves = append(kingMoves, &Move{piece, originSquare, &kingDestSquare, EMPTY, make([]*Square, 0), EMPTY})
 	}
 	kingMoves = filterMovesByKingSafety(board, kingMoves)
+	kingMoves = filterMovesByKingCollision(board, kingMoves)
 	return kingMoves
 }
 
