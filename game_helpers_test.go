@@ -963,13 +963,6 @@ var _ = Describe("GameHelpers", func() {
 				move := &Move{WHITE_PAWN, &Square{2, 2}, &Square{5, 2}, EMPTY, make([]*Square, 0), EMPTY}
 				Expect(IsLegalMove(board, move)).To(BeFalse())
 			})
-			Context("and the move would be legal except that the board is in a terminal board state", func() {
-				It("returns false", func() {
-					board, _ := BoardFromFEN("8/4k3/8/8/5N2/6K1/8/8 w - - 0 1")
-					move := &Move{WHITE_KING, &Square{3, 7}, &Square{4, 7}, EMPTY, make([]*Square, 0), EMPTY}
-					Expect(IsLegalMove(board, move)).To(BeFalse())
-				})
-			})
 		})
 	})
 	Describe("#HasLegalMove", func() {
@@ -985,7 +978,7 @@ var _ = Describe("GameHelpers", func() {
 		When("the board does not have legal moves", func() {
 			BeforeEach(func() {
 				var boardErr error
-				board, boardErr = BoardFromFEN("8/8/2k2K2/5N2/8/8/8/8 w - - 0 1")
+				board, boardErr = BoardFromFEN("k6r/5n2/8/8/8/8/1QK5/R7 b - - 0 1")
 				Expect(boardErr).To(Succeed())
 			})
 			It("returns false", func() {

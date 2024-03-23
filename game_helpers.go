@@ -148,7 +148,7 @@ func addKingChecksToMoves(board *Board, moves *[]*Move) {
 	}
 }
 func GetLegalMovesForPawn(board *Board, square *Square) ([]*Move, error) {
-	if board.Result != BOARD_RESULT_IN_PROGRESS {
+	if board.IsCheckmate() {
 		emptyMoves := make([]*Move, 0)
 		return emptyMoves, nil
 	}
@@ -247,7 +247,7 @@ func GetLegalMovesForPawn(board *Board, square *Square) ([]*Move, error) {
 }
 
 func GetLegalMovesForKnight(board *Board, square *Square) ([]*Move, error) {
-	if board.Result != BOARD_RESULT_IN_PROGRESS {
+	if board.IsCheckmate() {
 		emptyMoves := make([]*Move, 0)
 		return emptyMoves, nil
 	}
@@ -287,7 +287,7 @@ func GetLegalMovesForKnight(board *Board, square *Square) ([]*Move, error) {
 }
 
 func GetLegalMovesForBishop(board *Board, square *Square) ([]*Move, error) {
-	if board.Result != BOARD_RESULT_IN_PROGRESS {
+	if board.IsCheckmate() {
 		emptyMoves := make([]*Move, 0)
 		return emptyMoves, nil
 	}
@@ -325,7 +325,7 @@ func GetLegalMovesForBishop(board *Board, square *Square) ([]*Move, error) {
 }
 
 func GetLegalMovesForRook(board *Board, square *Square) ([]*Move, error) {
-	if board.Result != BOARD_RESULT_IN_PROGRESS {
+	if board.IsCheckmate() {
 		emptyMoves := make([]*Move, 0)
 		return emptyMoves, nil
 	}
@@ -363,7 +363,7 @@ func GetLegalMovesForRook(board *Board, square *Square) ([]*Move, error) {
 }
 
 func GetLegalMovesForQueen(board *Board, square *Square) ([]*Move, error) {
-	if board.Result != BOARD_RESULT_IN_PROGRESS {
+	if board.IsCheckmate() {
 		emptyMoves := make([]*Move, 0)
 		return emptyMoves, nil
 	}
@@ -401,7 +401,7 @@ func GetLegalMovesForQueen(board *Board, square *Square) ([]*Move, error) {
 }
 
 func GetLegalMovesForKing(board *Board) []*Move {
-	if board.Result != BOARD_RESULT_IN_PROGRESS {
+	if board.IsCheckmate() {
 		emptyMoves := make([]*Move, 0)
 		return emptyMoves
 	}
@@ -521,37 +521,9 @@ func HasLegalMove(board *Board) bool {
 	return false
 }
 
-func GetLegalMovesBySquare(board *Board, stopAtFirst bool) (*[8][8][]*Move, uint8, error) {
-	//for the active player, it returns:
-	//	1. A 2d array which maps to board squares, where the element type
-	//	   is a slice of legal moves for that piece in that square
-	// 2. The total count of all legal moves
-	var boardMoves [8][8][]*Move
-	movesCount := uint8(0)
-	if board.Result != BOARD_RESULT_IN_PROGRESS {
-		return nil, 0, fmt.Errorf("cannot generate moves by square on terminal board")
-	}
-	for rank := uint8(1); rank < 9; rank++ {
-		for file := uint8(1); file < 9; file++ {
-			square := Square{rank, file}
-			movesBySquare, movesErr := GetLegalMovesFromOrigin(board, &square)
-			if movesErr != nil {
-				return nil, 0, fmt.Errorf("cannot generates moves by square: %s", movesErr)
-			}
-			boardMoves[rank-1][file-1] = movesBySquare
-			movesCount += uint8(len(movesBySquare))
-
-			if stopAtFirst && movesCount > 0 {
-				return &boardMoves, movesCount, nil
-			}
-		}
-	}
-	return &boardMoves, movesCount, nil
-}
-
 func GetLegalMoves(board *Board) ([]*Move, error) {
 	var moves = make([]*Move, 0)
-	if board.Result != BOARD_RESULT_IN_PROGRESS {
+	if board.IsCheckmate() {
 		return moves, fmt.Errorf("cannot generate moves on terminal board")
 	}
 	for rank := uint8(1); rank < 9; rank++ {
@@ -709,6 +681,7 @@ func UpdateBoardCounters(lastBoard *Board, boardBuilder *BoardBuilder, move *Mov
 		boardBuilder.WithFullMoveCount(lastBoard.FullMoveCount + 1)
 	}
 }
+
 func UpdateBoardEnPassantSquare(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {
 	if move.DoesAllowEnPassant() {
 		enPassantSquare := &Square{
@@ -720,6 +693,7 @@ func UpdateBoardEnPassantSquare(lastBoard *Board, boardBuilder *BoardBuilder, mo
 		boardBuilder.WithEnPassantSquare(nil)
 	}
 }
+
 func UpdateCastleRights(lastBoard *Board, boardBuilder *BoardBuilder, move *Move) {
 	if move.EndSquare.EqualTo(&Square{8, 1}) {
 		boardBuilder.WithCanBlackCastleQueenside(false)

@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-const PRINT_LEAFS = true
-const FOCUS_TEST_IDX = 8
+const PRINT_LEAFS = false
+const FOCUS_TEST_IDX = -1
 const MAX_DEPTH = 3
 
 var scanner *bufio.Scanner
@@ -36,7 +36,7 @@ func _perft(board *chess.Board, depth int, hist []*chess.Move) int {
 		if leaf && PRINT_LEAFS {
 			printLeaf(nextBoard, newHist)
 		}
-		if nextBoard.Result != chess.BOARD_RESULT_IN_PROGRESS {
+		if nextBoard.IsCheckmate() {
 			if leaf {
 				nodeCnt++
 			}
