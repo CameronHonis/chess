@@ -1,6 +1,7 @@
 package chess
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -13,14 +14,19 @@ type Move struct {
 	PawnUpgradedTo      Piece     `json:"pawnUpgradedTo"`
 }
 
+// Deprecated: Replaced with "Equal" instead - due to support from google/go-cmp
 func (move *Move) EqualTo(otherMove *Move) bool {
+	return move.Equal(otherMove)
+}
+
+func (move *Move) Equal(otherMove *Move) bool {
 	if len(move.KingCheckingSquares) != len(otherMove.KingCheckingSquares) {
 		return false
 	}
 	for _, checkingSquare := range move.KingCheckingSquares {
 		foundMatch := false
 		for _, otherCheckingSquare := range otherMove.KingCheckingSquares {
-			if checkingSquare.EqualTo(otherCheckingSquare) {
+			if checkingSquare.Equal(otherCheckingSquare) {
 				foundMatch = true
 				break
 			}
@@ -30,8 +36,8 @@ func (move *Move) EqualTo(otherMove *Move) bool {
 		}
 	}
 	return move.Piece == otherMove.Piece &&
-		move.StartSquare.EqualTo(otherMove.StartSquare) &&
-		move.EndSquare.EqualTo(otherMove.EndSquare) &&
+		move.StartSquare.Equal(otherMove.StartSquare) &&
+		move.EndSquare.Equal(otherMove.EndSquare) &&
 		move.CapturedPiece == otherMove.CapturedPiece &&
 		move.PawnUpgradedTo == otherMove.PawnUpgradedTo
 }
@@ -76,7 +82,7 @@ func (move *Move) ToAlgebraic(board *Board) string {
 					{Rank: move.EndSquare.Rank + 2, File: move.EndSquare.File - 1},
 				}
 				for _, sharedKnightSquare := range sharedKnightSquares {
-					if sharedKnightSquare.EqualTo(move.StartSquare) {
+					if sharedKnightSquare.Equal(move.StartSquare) {
 						continue
 					}
 					if !sharedKnightSquare.IsValidBoardSquare() {
@@ -103,7 +109,7 @@ func (move *Move) ToAlgebraic(board *Board) string {
 						if !targetSquare.IsValidBoardSquare() {
 							break
 						}
-						if targetSquare.EqualTo(move.StartSquare) {
+						if targetSquare.Equal(move.StartSquare) {
 							break
 						}
 						if board.GetPieceOnSquare(targetSquare) != EMPTY {
@@ -172,4 +178,234 @@ func (move *Move) ToAlgebraic(board *Board) string {
 	writeCheckSpecifier()
 
 	return algBuilder.String()
+}
+
+// ToLongAlgebraic adheres to the UCI "long algebraic notation", which differs from the standard
+// "long algebraic notation". The UCI version is restricted to the start/end squares and a piece
+// delimiter for upgrading pawns.
+func (move *Move) ToLongAlgebraic() string {
+	var upgradeChar string
+	if move.PawnUpgradedTo.IsQueen() {
+		upgradeChar = "q"
+	} else if move.PawnUpgradedTo.IsRook() {
+		upgradeChar = "r"
+	} else if move.PawnUpgradedTo.IsBishop() {
+		upgradeChar = "b"
+	} else if move.PawnUpgradedTo.IsKnight() {
+		upgradeChar = "n"
+	}
+	return fmt.Sprintf("%s%s%s", move.StartSquare.ToAlgebraicCoords(), move.EndSquare.ToAlgebraicCoords(), upgradeChar)
+}
+
+func MoveFromAlgebraic(algMove string, priorBoard *Board) (*Move, error) {
+	originChars, targetChars, piece, upgradePiece := extractAlgebraicMoveInfo(algMove, priorBoard.IsWhiteTurn)
+
+	landSqr, landSquareErr := SquareFromAlgebraicCoords(targetChars)
+	if landSquareErr != nil {
+		return nil, fmt.Errorf("could not create move %s: could not make land square: %s", algMove, landSquareErr)
+	}
+
+	var validMovesFromOrigin = make([]*Move, 0)
+	var movesErr error
+	if len(originChars) == 2 {
+		originSqr, originSqrErr := SquareFromAlgebraicCoords(originChars)
+		if originSqrErr != nil {
+			return nil, fmt.Errorf("could not create move %s: could not make origin square: %s", algMove, originSqrErr)
+		}
+		validMovesFromOrigin, movesErr = GetLegalMovesFromOrigin(priorBoard, originSqr)
+	} else if len(originChars) == 1 {
+		originChar := originChars[0]
+		if originChar >= 'a' && originChar <= 'h' {
+			file := originChar - 'a' + 1
+			originSqr, originSqrErr := priorBoard.pieceSquareByFile(piece, file)
+			if originSqrErr != nil {
+				return nil, fmt.Errorf("could not create move %s: %s", algMove, originSqrErr)
+			}
+			validMovesFromOrigin, movesErr = GetLegalMovesFromOrigin(priorBoard, originSqr)
+		} else if originChar >= '1' && originChar <= '8' {
+			rank := originChar - '1' + 1
+			originSqr, originSqrErr := priorBoard.pieceSquareByRank(piece, rank)
+			if originSqrErr != nil {
+				return nil, fmt.Errorf("could not create move %s: %s", algMove, originSqrErr)
+			}
+			validMovesFromOrigin, movesErr = GetLegalMovesFromOrigin(priorBoard, originSqr)
+		} else {
+			return nil, fmt.Errorf("malformed origin char %s in move %s", string(originChar), algMove)
+		}
+	} else {
+		pieceSqrs := priorBoard.pieceSquaresOnBoard(piece)
+		if len(pieceSqrs) == 0 {
+			return nil, fmt.Errorf("cannot create move, piece of type %s does not exist on %s", piece, priorBoard)
+		}
+		for _, pieceSqr := range pieceSqrs {
+			var validMovesFromPieceSqr []*Move
+			validMovesFromPieceSqr, movesErr = GetLegalMovesFromOrigin(priorBoard, pieceSqr)
+			validMovesFromOrigin = append(validMovesFromOrigin, validMovesFromPieceSqr...)
+		}
+	}
+
+	var validMoves = make([]*Move, 0)
+	for _, move := range validMovesFromOrigin {
+		if move.EndSquare.Equal(landSqr) {
+			validMoves = append(validMoves, move)
+		}
+	}
+
+	if movesErr != nil {
+		return nil, fmt.Errorf("cannot create move, could not generate legal moves that match move %s on %s: %s", algMove, priorBoard, movesErr)
+	}
+	if len(validMoves) == 4 && upgradePiece != EMPTY {
+		for _, validMove := range validMoves {
+			if validMove.PawnUpgradedTo == upgradePiece {
+				validMoves = []*Move{validMove}
+				break
+			}
+		}
+	}
+	if len(validMoves) > 1 {
+		return nil, fmt.Errorf("cannot create move, move repr %s is ambiguous. Rank and/or file needed on %s", algMove, priorBoard)
+	}
+	if len(validMoves) == 0 {
+		return nil, fmt.Errorf("cannot create move, no legal moves exist with piece %s and landSqr %s on %s", piece, landSqr, priorBoard)
+	}
+	return validMoves[0], nil
+}
+
+func MoveFromLongAlgebraic(algMove string, priorBoard *Board) (*Move, error) {
+	originChars, targetChars, _, upgradePiece := extractAlgebraicMoveInfo(algMove, priorBoard.IsWhiteTurn)
+	if len(originChars) != 2 {
+		return nil, fmt.Errorf("cannot create move, long algebraic origin must be a square, got: %s", originChars)
+	}
+	originSqr, originSqrErr := SquareFromAlgebraicCoords(originChars)
+	if originSqrErr != nil {
+		return nil, fmt.Errorf("cannot create move, error reading origin square from move %s: %s", algMove, originSqrErr)
+	}
+	landSqr, landSqrErr := SquareFromAlgebraicCoords(targetChars)
+	if landSqrErr != nil {
+		return nil, fmt.Errorf("cannot create move, error reading land square from move %s: %s", algMove, landSqrErr)
+	}
+	moves, movesErr := GetLegalMovesFromOrigin(priorBoard, originSqr)
+	if movesErr != nil {
+		return nil, fmt.Errorf("cannot create move, error getting moves from origin square %s on %s: %s", originChars, priorBoard, movesErr)
+	}
+	for _, move := range moves {
+		if move.EndSquare.Equal(landSqr) {
+			if move.PawnUpgradedTo != upgradePiece {
+				continue
+			}
+			return move, nil
+		}
+	}
+	return nil, fmt.Errorf("cannot create move, could not find move from %s to %s on %s", originChars, targetChars, priorBoard)
+}
+
+// extractAlgebraicMoveInfo supports both standard algebraic notation and long algebraic notation move formats
+// It returns:
+//   - the string repr of the move origin - either an empty string or rank/file or both
+//   - the algebraic notation of the land square
+//   - the piece involved in the move
+//   - the piece the pawn was upgraded to
+func extractAlgebraicMoveInfo(algMove string, isWhiteTurn bool) (string, string, Piece, Piece) {
+	if algMove == "O-O" {
+		if isWhiteTurn {
+			return "e1", "g1", WHITE_KING, EMPTY
+		} else {
+			return "e8", "g8", BLACK_KING, EMPTY
+		}
+	} else if algMove == "O-O-O" {
+		if isWhiteTurn {
+			return "e1", "c1", WHITE_KING, EMPTY
+		} else {
+			return "e8", "c8", BLACK_KING, EMPTY
+		}
+	}
+	var ptr = 0
+	var piece Piece
+
+	firstChar := algMove[0]
+	if firstChar == 'N' {
+		if isWhiteTurn {
+			piece = WHITE_KNIGHT
+		} else {
+			piece = BLACK_KNIGHT
+		}
+		ptr++
+	} else if firstChar == 'B' {
+		if isWhiteTurn {
+			piece = WHITE_BISHOP
+		} else {
+			piece = BLACK_BISHOP
+		}
+		ptr++
+	} else if firstChar == 'R' {
+		if isWhiteTurn {
+			piece = WHITE_ROOK
+		} else {
+			piece = BLACK_ROOK
+		}
+		ptr++
+	} else if firstChar == 'Q' {
+		if isWhiteTurn {
+			piece = WHITE_QUEEN
+		} else {
+			piece = BLACK_QUEEN
+		}
+		ptr++
+	} else if firstChar == 'K' {
+		if isWhiteTurn {
+			piece = WHITE_KING
+		} else {
+			piece = BLACK_KING
+		}
+		ptr++
+	} else {
+		if isWhiteTurn {
+			piece = WHITE_PAWN
+		} else {
+			piece = BLACK_PAWN
+		}
+	}
+
+	var originChars string
+	var targetChars string
+	var upgradePiece = EMPTY
+	for ptr < len(algMove) {
+		c := algMove[ptr]
+		if c >= 'a' && c <= 'h' {
+			if targetChars != "" {
+				// slide target to origin
+				originChars = targetChars
+			}
+			targetChars = string(c)
+		} else if c >= '1' && c <= '8' {
+			targetChars += string(c)
+		} else if c == 'Q' || c == 'q' {
+			if isWhiteTurn {
+				upgradePiece = WHITE_QUEEN
+			} else {
+				upgradePiece = BLACK_QUEEN
+			}
+		} else if c == 'R' || c == 'r' {
+			if isWhiteTurn {
+				upgradePiece = WHITE_ROOK
+			} else {
+				upgradePiece = BLACK_ROOK
+			}
+		} else if c == 'B' || c == 'b' {
+			if isWhiteTurn {
+				upgradePiece = WHITE_BISHOP
+			} else {
+				upgradePiece = BLACK_BISHOP
+			}
+		} else if c == 'N' || c == 'n' {
+			if isWhiteTurn {
+				upgradePiece = WHITE_KNIGHT
+			} else {
+				upgradePiece = BLACK_KNIGHT
+			}
+		}
+		ptr++
+	}
+
+	return originChars, targetChars, piece, upgradePiece
 }

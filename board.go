@@ -391,3 +391,43 @@ func (board *Board) IsCheckmate() bool {
 func (board *Board) String() string {
 	return fmt.Sprintf("Board<%s>", board.ToFEN())
 }
+
+// pieceSquareByFile strictly used for finding origin square of a move expressed in algebraic notation
+// where the origin square is not explicitly given.
+func (board *Board) pieceSquareByRank(piece Piece, rank uint8) (*Square, error) {
+	for file := uint8(1); file < 9; file++ {
+		sqr := &Square{rank, file}
+		_piece := board.GetPieceOnSquare(sqr)
+		if piece == _piece {
+			return sqr, nil
+		}
+	}
+	return nil, fmt.Errorf("could not find peice %s on rank %s on %s", piece, string(rank), board.ToFEN())
+}
+
+// pieceSquareByFile strictly used for finding origin square of a move expressed in algebraic notation
+// where the origin square is not explicitly given.
+func (board *Board) pieceSquareByFile(piece Piece, file uint8) (*Square, error) {
+	for rank := uint8(1); rank < 9; rank++ {
+		sqr := &Square{rank, file}
+		_piece := board.GetPieceOnSquare(sqr)
+		if piece == _piece {
+			return sqr, nil
+		}
+	}
+	return nil, fmt.Errorf("could not find piece %s on file %s of %s", piece, string(file), board.ToFEN())
+}
+
+func (board *Board) pieceSquaresOnBoard(piece Piece) []*Square {
+	var out = make([]*Square, 0)
+	for rank := uint8(1); rank < 9; rank++ {
+		for file := uint8(1); file < 9; file++ {
+			sqr := &Square{rank, file}
+			_piece := board.GetPieceOnSquare(sqr)
+			if piece == _piece {
+				out = append(out, sqr)
+			}
+		}
+	}
+	return out
+}

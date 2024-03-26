@@ -134,6 +134,9 @@ func perftFromFile() {
 }
 
 var _ = It("perft", func() {
+	//f, _ := os.Create("cpu.prof")
+	//_ = pprof.StartCPUProfile(f)
+	//defer pprof.StopCPUProfile()
 	perftFromFile()
 	//board, _ := chess.BoardFromFEN("8/8/8/8/8/8/6k1/4K2R w K - 0 1")
 	//perft(board, 3)

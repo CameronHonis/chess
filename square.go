@@ -31,8 +31,13 @@ func (s *Square) IsDarkSquare() bool {
 	return !s.IsLightSquare()
 }
 
-func (s *Square) EqualTo(other *Square) bool {
+func (s *Square) Equal(other *Square) bool {
 	return s.Rank == other.Rank && s.File == other.File
+}
+
+// Deprecated: Replaced by Equal in favor of support for google/go-cmp
+func (s *Square) EqualTo(other *Square) bool {
+	return s.Equal(other)
 }
 
 func (s *Square) Copy() *Square {

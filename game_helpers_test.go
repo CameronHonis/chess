@@ -28,7 +28,7 @@ func compareMoves(expMoves []Move, realMoves []*Move) {
 	for _, realMove := range realMoves {
 		foundMatch := false
 		for _, expMove := range expMoves {
-			if expMove.EqualTo(realMove) {
+			if expMove.Equal(realMove) {
 				foundMatch = true
 				break
 			}
@@ -797,7 +797,7 @@ var _ = Describe("GameHelpers", func() {
 						board, _ := BoardFromFEN("4k3/p7/8/8/8/8/3PPP2/3QK1NR w K - 0 1")
 						realMoves := GetLegalMovesForKing(board)
 						for _, realMove := range realMoves {
-							Expect(realMove.EndSquare.EqualTo(&Square{1, 7})).To(BeFalse())
+							Expect(realMove.EndSquare.Equal(&Square{1, 7})).To(BeFalse())
 						}
 					})
 				})
@@ -806,7 +806,7 @@ var _ = Describe("GameHelpers", func() {
 						board, _ := BoardFromFEN("3pkb1r/3ppp2/8/8/8/8/8/3K4 b k - 0 1")
 						realMoves := GetLegalMovesForKing(board)
 						for _, realMove := range realMoves {
-							Expect(realMove.EndSquare.EqualTo(&Square{8, 7})).To(BeFalse())
+							Expect(realMove.EndSquare.Equal(&Square{8, 7})).To(BeFalse())
 						}
 					})
 				})
@@ -818,7 +818,7 @@ var _ = Describe("GameHelpers", func() {
 						realMoves := GetLegalMovesForKing(board)
 						foundCastleMove := false
 						for _, realMove := range realMoves {
-							if realMove.EndSquare.EqualTo(&Square{1, 7}) {
+							if realMove.EndSquare.Equal(&Square{1, 7}) {
 								foundCastleMove = true
 								break
 							}
@@ -830,7 +830,7 @@ var _ = Describe("GameHelpers", func() {
 							board, _ := BoardFromFEN("4k1r1/p7/8/8/8/5N2/3PPP2/3QK2R w K - 0 1")
 							realMoves := GetLegalMovesForKing(board)
 							for _, realMove := range realMoves {
-								Expect(realMove.EndSquare.EqualTo(&Square{1, 7})).To(BeFalse())
+								Expect(realMove.EndSquare.Equal(&Square{1, 7})).To(BeFalse())
 							}
 						})
 					})
@@ -842,7 +842,7 @@ var _ = Describe("GameHelpers", func() {
 						It("does not return a king move to castle kingside", func() {
 							moves := GetLegalMovesForKing(board)
 							for _, move := range moves {
-								Expect(move.EndSquare.EqualTo(&Square{1, 7})).To(BeFalse())
+								Expect(move.EndSquare.Equal(&Square{1, 7})).To(BeFalse())
 							}
 						})
 					})
@@ -853,7 +853,7 @@ var _ = Describe("GameHelpers", func() {
 						realMoves := GetLegalMovesForKing(board)
 						foundCastleMove := false
 						for _, realMove := range realMoves {
-							if realMove.EndSquare.EqualTo(&Square{8, 7}) {
+							if realMove.EndSquare.Equal(&Square{8, 7}) {
 								foundCastleMove = true
 								break
 							}
@@ -871,7 +871,7 @@ var _ = Describe("GameHelpers", func() {
 					realMoves := GetLegalMovesForKing(board)
 					foundCastleMove := false
 					for _, realMove := range realMoves {
-						if realMove.EndSquare.EqualTo(&Square{8, 7}) {
+						if realMove.EndSquare.Equal(&Square{8, 7}) {
 							foundCastleMove = true
 							break
 						}
@@ -887,7 +887,7 @@ var _ = Describe("GameHelpers", func() {
 						board, _ := BoardFromFEN("4k3/8/2p5/8/8/8/3PPP2/RQ2KB2 w Q - 0 1")
 						realMoves := GetLegalMovesForKing(board)
 						for _, realMove := range realMoves {
-							Expect(realMove.EndSquare.EqualTo(&Square{1, 3})).To(BeFalse())
+							Expect(realMove.EndSquare.Equal(&Square{1, 3})).To(BeFalse())
 						}
 					})
 				})
@@ -896,7 +896,7 @@ var _ = Describe("GameHelpers", func() {
 						board, _ := BoardFromFEN("r2qkb2/3ppp2/8/8/8/8/3PPP2/R2QKB2 b q - 1 1")
 						realMoves := GetLegalMovesForKing(board)
 						for _, realMove := range realMoves {
-							Expect(realMove.EndSquare.EqualTo(&Square{8, 3})).To(BeFalse())
+							Expect(realMove.EndSquare.Equal(&Square{8, 3})).To(BeFalse())
 						}
 					})
 				})
@@ -908,7 +908,7 @@ var _ = Describe("GameHelpers", func() {
 						realMoves := GetLegalMovesForKing(board)
 						foundCastleMove := false
 						for _, realMove := range realMoves {
-							if realMove.EndSquare.EqualTo(&Square{1, 3}) {
+							if realMove.EndSquare.Equal(&Square{1, 3}) {
 								foundCastleMove = true
 								break
 							}
@@ -920,7 +920,7 @@ var _ = Describe("GameHelpers", func() {
 							board, _ := BoardFromFEN("r2qkb2/3ppp2/8/8/8/8/3PPP2/R2QKB2 b q - 1 1")
 							realMoves := GetLegalMovesForKing(board)
 							for _, realMove := range realMoves {
-								Expect(realMove.EndSquare.EqualTo(&Square{8, 3})).To(BeFalse())
+								Expect(realMove.EndSquare.Equal(&Square{8, 3})).To(BeFalse())
 							}
 						})
 					})
@@ -931,7 +931,7 @@ var _ = Describe("GameHelpers", func() {
 						realMoves := GetLegalMovesForKing(board)
 						foundCastleMove := false
 						for _, realMove := range realMoves {
-							if realMove.EndSquare.EqualTo(&Square{8, 3}) {
+							if realMove.EndSquare.Equal(&Square{8, 3}) {
 								foundCastleMove = true
 								break
 							}
@@ -1129,7 +1129,7 @@ var _ = Describe("GameHelpers", func() {
 				})
 				It("sets the en passant square", func() {
 					Expect(board.OptEnPassantSquare).ToNot(BeNil())
-					Expect(board.OptEnPassantSquare.EqualTo(&Square{3, 5}))
+					Expect(board.OptEnPassantSquare.Equal(&Square{3, 5}))
 				})
 			})
 		})
